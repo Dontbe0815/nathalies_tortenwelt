@@ -10,7 +10,7 @@ const torten = [
   { name: 'Käse Sahne Torte mit Fondantdecke', file: 'kaese-sahne-torte.png' },
   { name: 'Marzipan Torte', file: 'marzipan-torte.png' },
   { name: 'Schoko Bananen Torte', file: 'schoko-bananen-torte.png' },
-  { name: 'Schwarzwälder Kirschtorte', file: 'schwarzwälder-kirschtorte.png' },
+  { name: 'Schwarzwälder Kirschtorte', file: 'schwarzwaelder-kirschtorte.png' },
 ]
 
 export default function Home() {
@@ -84,10 +84,10 @@ export default function Home() {
           className={`relative z-30 px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
           style={{ transform: `translateY(${scrollY * 0.15}px)` }}
         >
-          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
             
             {/* Schwebendes Logo - GROß */}
-            <div className="relative w-56 h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 flex-shrink-0 animate-float">
+            <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] flex-shrink-0 animate-float">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/logo.png"
@@ -98,23 +98,23 @@ export default function Home() {
 
             {/* Text */}
             <div className="text-center md:text-left">
-              {/* Name mit eleganter Schrift */}
-              <h1 className="font-great-vibes text-5xl md:text-6xl lg:text-7xl text-rose-800 mb-2 tracking-wide">
+              {/* Name mit eleganter Schrift - GRÖSSER */}
+              <h1 className="font-great-vibes text-6xl md:text-7xl lg:text-8xl text-rose-800 mb-3 tracking-wide">
                 Nathalies Tortenwelt
               </h1>
               
               {/* Decorative line */}
-              <div className="flex items-center justify-center md:justify-start gap-3 my-4">
-                <span className="w-16 md:w-24 h-px bg-gradient-to-r from-transparent to-amber-400/60" />
-                <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
-                <span className="w-16 md:w-24 h-px bg-gradient-to-l from-transparent to-amber-400/60" />
+              <div className="flex items-center justify-center md:justify-start gap-3 my-5">
+                <span className="w-20 md:w-28 h-px bg-gradient-to-r from-transparent to-amber-400/60" />
+                <Heart className="w-6 h-6 text-rose-400 fill-rose-400" />
+                <span className="w-20 md:w-28 h-px bg-gradient-to-l from-transparent to-amber-400/60" />
               </div>
 
-              {/* Tagline mit eleganter Schrift */}
-              <p className="font-cormorant text-2xl md:text-3xl lg:text-4xl text-rose-700/90 font-medium italic mb-2">
+              {/* Tagline mit eleganter Schrift - GRÖSSER */}
+              <p className="font-cormorant text-3xl md:text-4xl lg:text-5xl text-rose-700/90 font-medium italic mb-3">
                 Handgemachte Torten mit Liebe
               </p>
-              <p className="font-cormorant text-lg md:text-xl text-rose-600/70 max-w-md">
+              <p className="font-cormorant text-xl md:text-2xl text-rose-600/70 max-w-lg">
                 Jede Torte ein Unikat, gebacken mit Herz und Seele
               </p>
             </div>
@@ -126,35 +126,35 @@ export default function Home() {
           onClick={scrollToGallery}
           className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 text-rose-600/70 hover:text-rose-700 transition-colors cursor-pointer group"
         >
-          <span className="font-cormorant text-base font-medium tracking-wide">Entdecken</span>
-          <ChevronDown className="w-6 h-6 animate-bounce group-hover:scale-110 transition-transform" />
+          <span className="font-cormorant text-lg font-medium tracking-wide">Entdecken</span>
+          <ChevronDown className="w-7 h-7 animate-bounce group-hover:scale-110 transition-transform" />
         </button>
       </section>
 
       {/* Gallery Section */}
-      <section ref={galleryRef} className="py-16 md:py-24 px-4 md:px-6 lg:px-8">
+      <section ref={galleryRef} className="py-20 md:py-28 px-4 md:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          {/* Section Title */}
-          <div className="text-center mb-12 md:mb-16">
-            <h2 className="font-great-vibes text-4xl md:text-5xl lg:text-6xl text-rose-900 mb-3">
+          {/* Section Title - GRÖSSER */}
+          <div className="text-center mb-16 md:mb-20">
+            <h2 className="font-great-vibes text-5xl md:text-6xl lg:text-7xl text-rose-900 mb-4">
               Meine Kreationen
             </h2>
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <span className="w-12 h-px bg-rose-300/60" />
-              <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
-              <span className="w-12 h-px bg-rose-300/60" />
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="w-16 h-px bg-rose-300/60" />
+              <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
+              <span className="w-16 h-px bg-rose-300/60" />
             </div>
-            <p className="font-cormorant text-xl md:text-2xl text-rose-700/80 max-w-lg mx-auto">
+            <p className="font-cormorant text-2xl md:text-3xl text-rose-700/80 max-w-xl mx-auto">
               Jede Torte wird mit frischen Zutaten und viel Liebe zum Detail handgefertigt
             </p>
           </div>
 
           {/* Gallery Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 md:gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
             {torten.map((torte, index) => (
               <div
                 key={index}
-                className="group relative bg-white/70 backdrop-blur-sm rounded-3xl p-4 md:p-6 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border border-rose-100/50"
+                className="group relative bg-white/70 backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border border-rose-100/50"
                 onMouseEnter={() => setActiveCake(index)}
                 onMouseLeave={() => setActiveCake(null)}
               >
@@ -162,29 +162,29 @@ export default function Home() {
                 <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-200/0 to-amber-200/0 group-hover:from-rose-200/20 group-hover:to-amber-200/20 transition-all duration-500`} />
                 
                 {/* Cake Image Container */}
-                <div className="relative w-full aspect-square mb-3 md:mb-4 overflow-visible">
+                <div className="relative w-full aspect-square mb-4 overflow-visible">
                   {/* Background gradient */}
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${activeCake === index ? 'bg-gradient-to-br from-rose-100/60 to-amber-50/60' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
                   
-                  {/* Cake Image - NORMALES IMG TAG */}
+                  {/* Cake Image */}
                   <div className={`transition-transform duration-500 ${activeCake === index ? 'scale-110 -translate-y-2' : 'scale-100'}`}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`/images/${torte.file}`}
                       alt={torte.name}
-                      className="w-full h-full object-contain p-3 md:p-5 drop-shadow-lg"
+                      className="w-full h-full object-contain p-4 md:p-6 drop-shadow-lg"
                     />
                   </div>
                 </div>
                 
-                {/* Cake Name */}
-                <h3 className="font-cormorant text-xl md:text-2xl text-rose-800 text-center group-hover:text-rose-900 transition-colors duration-300 relative z-10 font-semibold">
+                {/* Cake Name - GRÖSSER */}
+                <h3 className="font-cormorant text-2xl md:text-3xl text-rose-800 text-center group-hover:text-rose-900 transition-colors duration-300 relative z-10 font-semibold">
                   {torte.name}
                 </h3>
 
                 {/* Decorative heart on hover */}
-                <div className={`absolute top-3 right-3 transition-all duration-300 ${activeCake === index ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-                  <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
+                <div className={`absolute top-4 right-4 transition-all duration-300 ${activeCake === index ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
+                  <Heart className="w-6 h-6 text-rose-400 fill-rose-400" />
                 </div>
               </div>
             ))}
@@ -193,28 +193,28 @@ export default function Home() {
       </section>
 
       {/* Instagram Section */}
-      <section className="py-16 md:py-24 px-4 md:px-6 bg-gradient-to-b from-transparent via-rose-100/40 to-rose-100/60">
+      <section className="py-20 md:py-28 px-4 md:px-6 bg-gradient-to-b from-transparent via-rose-100/40 to-rose-100/60">
         <div className="max-w-4xl mx-auto text-center">
           {/* Decorative element */}
-          <div className="flex justify-center mb-6">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-px bg-rose-300/60" />
-              <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
-              <span className="w-8 h-px bg-rose-300/60" />
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-3">
+              <span className="w-10 h-px bg-rose-300/60" />
+              <Heart className="w-6 h-6 text-rose-400 fill-rose-400" />
+              <span className="w-10 h-px bg-rose-300/60" />
             </div>
           </div>
 
-          <h2 className="font-great-vibes text-4xl md:text-5xl lg:text-6xl text-rose-900 mb-4">
+          <h2 className="font-great-vibes text-5xl md:text-6xl lg:text-7xl text-rose-900 mb-5">
             Folge mir auf Instagram
           </h2>
-          <p className="font-cormorant text-xl md:text-2xl text-rose-700/80 mb-10 md:mb-12 max-w-md mx-auto">
+          <p className="font-cormorant text-2xl md:text-3xl text-rose-700/80 mb-12 md:mb-14 max-w-md mx-auto">
             Lass dich täglich inspirieren und entdecke meine neuesten Kreationen
           </p>
 
-          <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12">
+          <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14">
             {/* QR Code */}
-            <div className="group bg-white p-5 md:p-6 rounded-3xl shadow-xl border border-rose-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-              <div className="relative w-44 h-44 md:w-52 md:h-52">
+            <div className="group bg-white p-6 md:p-8 rounded-3xl shadow-xl border border-rose-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+              <div className="relative w-52 h-52 md:w-60 md:h-60">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/images/qr.png"
@@ -229,25 +229,25 @@ export default function Home() {
               href="https://instagram.com/nathalies.tortenwelt"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-4 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-8 md:px-10 py-4 md:py-5 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
+              className="group flex items-center gap-5 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-10 md:px-12 py-5 md:py-6 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
             >
-              <Instagram className="w-6 h-6 md:w-7 md:h-7 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="font-cormorant text-xl md:text-2xl font-semibold">@nathalies.tortenwelt</span>
+              <Instagram className="w-7 h-7 md:w-8 md:h-8 group-hover:rotate-12 transition-transform duration-300" />
+              <span className="font-cormorant text-2xl md:text-3xl font-semibold">@nathalies.tortenwelt</span>
             </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-8 md:py-10 px-4 bg-rose-100/40 border-t border-rose-200/30">
+      <footer className="py-10 md:py-12 px-4 bg-rose-100/40 border-t border-rose-200/30">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Heart className="w-4 h-4 text-rose-400 fill-rose-400" />
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
           </div>
-          <p className="font-great-vibes text-2xl md:text-3xl text-rose-800 mb-2">
+          <p className="font-great-vibes text-3xl md:text-4xl text-rose-800 mb-2">
             Nathalies Tortenwelt
           </p>
-          <p className="font-cormorant text-rose-600/70">
+          <p className="font-cormorant text-lg text-rose-600/70">
             © {new Date().getFullYear()} Alle Rechte vorbehalten
           </p>
         </div>
