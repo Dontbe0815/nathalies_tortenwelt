@@ -5,13 +5,13 @@ import Image from 'next/image'
 import { Instagram, ChevronDown, Heart } from 'lucide-react'
 
 const torten = [
-  { name: 'Cappuccino Nuss Torte', file: 'Cappuccino Nuss Torte.png' },
-  { name: 'Erdbeer Torte', file: 'Erdbeer Torte.png' },
-  { name: 'Himbeer Torte', file: 'Himbeer Torte.png' },
-  { name: 'Käse Sahne Torte mit Fondantdecke', file: 'Käse Sahne Torte mit Fondantdecke.png' },
-  { name: 'Marzipan Torte', file: 'Marzipan Torte.png' },
-  { name: 'Schoko Bananen Torte', file: 'Schoko Bananen Torte.png' },
-  { name: 'Schwarzwälder Kirschtorte', file: 'Schwarzwälder Kirschtorte.png' },
+  { name: 'Cappuccino Nuss Torte', file: 'cappuccino-nuss-torte.png' },
+  { name: 'Erdbeer Torte', file: 'erdbeer-torte.png' },
+  { name: 'Himbeer Torte', file: 'himbeer-torte.png' },
+  { name: 'Käse Sahne Torte mit Fondantdecke', file: 'kaese-sahne-torte.png' },
+  { name: 'Marzipan Torte', file: 'marzipan-torte.png' },
+  { name: 'Schoko Bananen Torte', file: 'schoko-bananen-torte.png' },
+  { name: 'Schwarzwälder Kirschtorte', file: 'schwarzwälder-kirschtorte.png' },
 ]
 
 export default function Home() {
@@ -50,7 +50,7 @@ export default function Home() {
           style={{ transform: `scale(1.05) translateY(${scrollY * 0.2}px)` }}
         >
           <Image
-            src="/images/nathalies tortenwelt.png"
+            src="/images/nathalies-tortenwelt.png"
             alt=""
             fill
             className="object-cover opacity-25"
@@ -82,41 +82,47 @@ export default function Home() {
           />
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - Logo NEBEN Text */}
         <div 
-          className={`relative z-30 text-center px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
+          className={`relative z-30 px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
           style={{ transform: `translateY(${scrollY * 0.15}px)` }}
         >
-          {/* Schwebendes Logo */}
-          <div className="relative w-44 h-44 md:w-56 md:h-56 lg:w-72 lg:h-72 mx-auto mb-8 animate-float">
-            <Image
-              src="/images/logo.png"
-              alt="Nathalies Tortenwelt Logo"
-              fill
-              className="object-contain drop-shadow-2xl"
-              priority
-            />
-          </div>
+          <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-10">
+            
+            {/* Schwebendes Logo - GROß */}
+            <div className="relative w-56 h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 flex-shrink-0 animate-float">
+              <Image
+                src="/images/logo.png"
+                alt="Nathalies Tortenwelt Logo"
+                fill
+                className="object-contain drop-shadow-2xl"
+                priority
+              />
+            </div>
 
-          {/* Name mit eleganter Schrift */}
-          <h1 className="font-great-vibes text-5xl md:text-6xl lg:text-7xl text-rose-800 mb-2 tracking-wide">
-            Nathalies Tortenwelt
-          </h1>
-          
-          {/* Decorative line */}
-          <div className="flex items-center justify-center gap-3 my-4">
-            <span className="w-16 md:w-24 h-px bg-gradient-to-r from-transparent to-amber-400/60" />
-            <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
-            <span className="w-16 md:w-24 h-px bg-gradient-to-l from-transparent to-amber-400/60" />
-          </div>
+            {/* Text */}
+            <div className="text-center md:text-left">
+              {/* Name mit eleganter Schrift */}
+              <h1 className="font-great-vibes text-5xl md:text-6xl lg:text-7xl text-rose-800 mb-2 tracking-wide">
+                Nathalies Tortenwelt
+              </h1>
+              
+              {/* Decorative line */}
+              <div className="flex items-center justify-center md:justify-start gap-3 my-4">
+                <span className="w-16 md:w-24 h-px bg-gradient-to-r from-transparent to-amber-400/60" />
+                <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
+                <span className="w-16 md:w-24 h-px bg-gradient-to-l from-transparent to-amber-400/60" />
+              </div>
 
-          {/* Tagline mit eleganter Schrift */}
-          <p className="font-cormorant text-2xl md:text-3xl lg:text-4xl text-rose-700/90 font-medium italic mb-2">
-            Handgemachte Torten mit Liebe
-          </p>
-          <p className="font-cormorant text-lg md:text-xl text-rose-600/70 max-w-md mx-auto">
-            Jede Torte ein Unikat, gebacken mit Herz und Seele
-          </p>
+              {/* Tagline mit eleganter Schrift */}
+              <p className="font-cormorant text-2xl md:text-3xl lg:text-4xl text-rose-700/90 font-medium italic mb-2">
+                Handgemachte Torten mit Liebe
+              </p>
+              <p className="font-cormorant text-lg md:text-xl text-rose-600/70 max-w-md">
+                Jede Torte ein Unikat, gebacken mit Herz und Seele
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -164,7 +170,7 @@ export default function Home() {
                   {/* Background gradient */}
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${activeCake === index ? 'bg-gradient-to-br from-rose-100/60 to-amber-50/60' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
                   
-                  {/* Floating animation on hover */}
+                  {/* Cake Image */}
                   <div className={`transition-transform duration-500 ${activeCake === index ? 'scale-110 -translate-y-2' : 'scale-100'}`}>
                     <Image
                       src={`/images/${torte.file}`}
