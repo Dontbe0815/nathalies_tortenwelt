@@ -111,10 +111,10 @@ export default function Home() {
               </div>
 
               {/* Tagline mit eleganter Schrift - GRÖSSER */}
-              <p className="font-cormorant text-3xl md:text-4xl lg:text-5xl text-rose-700/90 font-medium italic mb-3">
+              <p className="font-cormorant text-3xl md:text-4xl lg:text-5xl text-rose-700/90 font-semibold italic mb-3">
                 Handgemachte Torten mit Liebe
               </p>
-              <p className="font-cormorant text-xl md:text-2xl text-rose-600/70 max-w-lg">
+              <p className="font-cormorant text-2xl md:text-3xl lg:text-4xl text-rose-700 font-bold max-w-lg">
                 Jede Torte ein Unikat, gebacken mit Herz und Seele
               </p>
             </div>
@@ -124,10 +124,10 @@ export default function Home() {
         {/* Scroll Indicator */}
         <button 
           onClick={scrollToGallery}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2 text-rose-600/70 hover:text-rose-700 transition-colors cursor-pointer group"
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3 text-rose-700 hover:text-rose-800 transition-colors cursor-pointer group"
         >
-          <span className="font-cormorant text-lg font-medium tracking-wide">Entdecken</span>
-          <ChevronDown className="w-7 h-7 animate-bounce group-hover:scale-110 transition-transform" />
+          <span className="font-cormorant text-xl md:text-2xl font-bold tracking-wide">Entdecken</span>
+          <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
         </button>
       </section>
 
@@ -226,13 +226,13 @@ export default function Home() {
 
             {/* Instagram Link */}
             <a
-              href="https://instagram.com/nathalies.tortenwelt"
+              href="https://instagram.com/nathalies_tortenwelt"
               target="_blank"
               rel="noopener noreferrer"
               className="group flex items-center gap-5 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-10 md:px-12 py-5 md:py-6 rounded-full shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300"
             >
               <Instagram className="w-7 h-7 md:w-8 md:h-8 group-hover:rotate-12 transition-transform duration-300" />
-              <span className="font-cormorant text-2xl md:text-3xl font-semibold">@nathalies.tortenwelt</span>
+              <span className="font-cormorant text-2xl md:text-3xl font-semibold">@nathalies_tortenwelt</span>
             </a>
           </div>
         </div>
