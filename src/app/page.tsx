@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import Image from 'next/image'
 import { Instagram, ChevronDown, Heart } from 'lucide-react'
 
 const torten = [
@@ -49,13 +48,11 @@ export default function Home() {
           className="absolute inset-0 z-0"
           style={{ transform: `scale(1.05) translateY(${scrollY * 0.2}px)` }}
         >
-          <Image
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
             src="/images/nathalies-tortenwelt.png"
             alt=""
-            fill
-            className="object-cover opacity-25"
-            priority
-            sizes="100vw"
+            className="w-full h-full object-cover opacity-25"
           />
         </div>
 
@@ -91,12 +88,11 @@ export default function Home() {
             
             {/* Schwebendes Logo - GROß */}
             <div className="relative w-56 h-56 md:w-72 md:h-72 lg:w-96 lg:h-96 flex-shrink-0 animate-float">
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/images/logo.png"
                 alt="Nathalies Tortenwelt Logo"
-                fill
-                className="object-contain drop-shadow-2xl"
-                priority
+                className="w-full h-full object-contain drop-shadow-2xl"
               />
             </div>
 
@@ -170,14 +166,13 @@ export default function Home() {
                   {/* Background gradient */}
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${activeCake === index ? 'bg-gradient-to-br from-rose-100/60 to-amber-50/60' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
                   
-                  {/* Cake Image */}
+                  {/* Cake Image - NORMALES IMG TAG */}
                   <div className={`transition-transform duration-500 ${activeCake === index ? 'scale-110 -translate-y-2' : 'scale-100'}`}>
-                    <Image
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
                       src={`/images/${torte.file}`}
                       alt={torte.name}
-                      fill
-                      className="object-contain p-3 md:p-5 drop-shadow-lg"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="w-full h-full object-contain p-3 md:p-5 drop-shadow-lg"
                     />
                   </div>
                 </div>
@@ -220,11 +215,11 @@ export default function Home() {
             {/* QR Code */}
             <div className="group bg-white p-5 md:p-6 rounded-3xl shadow-xl border border-rose-100/50 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
               <div className="relative w-44 h-44 md:w-52 md:h-52">
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src="/images/qr.png"
                   alt="Instagram QR Code"
-                  fill
-                  className="object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
             </div>
