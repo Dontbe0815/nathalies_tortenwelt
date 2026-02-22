@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Cake, Cherry, Cookie, Candy } from 'lucide-react'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Cake, Sparkles } from 'lucide-react'
 
 const torten = [
   { name: 'Cappuccino Nuss Torte', file: 'cappuccino-nuss-torte.png', description: 'Eine köstliche Kombination aus feinem Cappuccino und knackigen Nüssen. Ein Genuss für Kaffee-Liebhaber!' },
@@ -17,24 +17,115 @@ const torten = [
   { name: 'Überraschungs Torte', file: 'mystery.png', description: 'Lass dich überraschen! Eine einzigartige Kreation, die jedes Mal neu begeistert.' },
 ]
 
-// Beläge für das Minigame
-const belaege = [
-  { id: 'erdbeeren', name: 'Erdbeeren', emoji: '🍓', color: 'bg-red-400' },
-  { id: 'himbeeren', name: 'Himbeeren', emoji: '🫐', color: 'bg-purple-400' },
-  { id: 'schokolade', name: 'Schokolade', emoji: '🍫', color: 'bg-amber-700' },
-  { id: 'kirschen', name: 'Kirschen', emoji: '🍒', color: 'bg-red-600' },
-  { id: 'vanille', name: 'Vanille', emoji: '🍦', color: 'bg-yellow-100' },
-  { id: 'nuesse', name: 'Nüsse', emoji: '🥜', color: 'bg-amber-500' },
-  { id: 'streusel', name: 'Streusel', emoji: '🧁', color: 'bg-pink-300' },
-  { id: 'sahne', name: 'Sahne', emoji: '🥛', color: 'bg-white' },
+// Quiz Fragen
+const quizQuestions = [
+  {
+    question: "Wie sieht dein perfekter Sonntag aus?",
+    answers: [
+      { text: "Gemütlich mit Kaffee und einem Buch", cake: "Cappuccino Nuss Torte" },
+      { text: "Brunch mit Freunden", cake: "Käse Sahne Torte mit Fondantdecke" },
+      { text: "Schokolade und Netflix", cake: "Nutella Torte" },
+      { text: "Etwas Neues ausprobieren", cake: "Überraschungs Torte" },
+    ]
+  },
+  {
+    question: "Welche Farbe spricht dich am meisten an?",
+    answers: [
+      { text: "Warmes Braun", cake: "Schoko Bananen Torte" },
+      { text: "Leuchtendes Rot", cake: "Erdbeer Torte" },
+      { text: "Romantisches Rosa", cake: "Himbeer Torte" },
+      { text: "Klassisches Schwarz-Weiß", cake: "Schwarzwälder Kirschtorte" },
+    ]
+  },
+  {
+    question: "Was ist dein größter Genuss?",
+    answers: [
+      { text: "Die perfekte Tasse Kaffee", cake: "Cappuccino Nuss Torte" },
+      { text: "Fruchtige Frische", cake: "Erdbeer Torte" },
+      { text: "Cremige Schokolade", cake: "Nutella Torte" },
+      { text: "Knusprige Kekse", cake: "Oreo Torte" },
+    ]
+  },
+  {
+    question: "Bei welchem Anlass möchtest du deine Traum-Torte genießen?",
+    answers: [
+      { text: "Geburtstag", cake: "Käse Sahne Torte mit Fondantdecke" },
+      { text: "Romantisches Date", cake: "Himbeer Torte" },
+      { text: "Feier mit Freunden", cake: "Schwarzwälder Kirschtorte" },
+      { text: "Nur für mich alleine", cake: "Schoko Bananen Torte" },
+    ]
+  },
+  {
+    question: "Welche Geschmacksrichtung liebst du am meisten?",
+    answers: [
+      { text: "Schokoladig & Süß", cake: "Nutella Torte" },
+      { text: "Fruchtig & Frisch", cake: "Himbeer Torte" },
+      { text: "Nussig & Cremig", cake: "Marzipan Torte" },
+      { text: "Klassisch & Eleganta", cake: "Schwarzwälder Kirschtorte" },
+    ]
+  },
 ]
 
-const boeden = [
-  { id: 'schoko', name: 'Schokolade', color: 'bg-amber-800' },
-  { id: 'vanille', name: 'Vanille', color: 'bg-yellow-200' },
-  { id: 'erdbeer', name: 'Erdbeer', color: 'bg-pink-300' },
-  { id: 'marmor', name: 'Marmor', color: 'bg-gray-300' },
-]
+// Seasonal Themes
+type Season = 'default' | 'valentine' | 'easter' | 'christmas'
+
+const getSeason = (): Season => {
+  const now = new Date()
+  const month = now.getMonth()
+  const day = now.getDate()
+  
+  // Valentine (Feb 1-14)
+  if (month === 1 && day <= 14) return 'valentine'
+  // Easter (March/April - approximated)
+  if (month === 2 || month === 3) return 'easter'
+  // Christmas (December)
+  if (month === 11) return 'christmas'
+  
+  return 'default'
+}
+
+const seasonConfig = {
+  default: {
+    name: 'Klassisch',
+    colors: {
+      primary: 'rose',
+      secondary: 'amber',
+      accent: 'pink',
+    },
+    decorations: [] as string[],
+    greeting: 'Willkommen!',
+  },
+  valentine: {
+    name: 'Valentinstag',
+    colors: {
+      primary: 'rose',
+      secondary: 'pink',
+      accent: 'red',
+    },
+    decorations: ['💕', '❤️', '💘', '🌹', '💗'],
+    greeting: 'Alles Liebe! 💕',
+  },
+  easter: {
+    name: 'Ostern',
+    colors: {
+      primary: 'yellow',
+      secondary: 'green',
+      accent: 'pink',
+    },
+    decorations: ['🐰', '🥚', '🌸', '🐥', '🌷'],
+    greeting: 'Frohe Ostern! 🐰',
+  },
+  christmas: {
+    name: 'Weihnachten',
+    colors: {
+      primary: 'red',
+      secondary: 'green',
+      accent: 'gold',
+    },
+    decorations: ['🎄', '⭐', '🎅', '🎁', '❄️'],
+    greeting: 'Frohe Weihnachten! 🎄',
+  },
+}
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
@@ -45,12 +136,25 @@ export default function Home() {
   const [darkMode, setDarkMode] = useState(false)
   const galleryRef = useRef<HTMLDivElement>(null)
   
-  // Minigame State
-  const [selectedBoden, setSelectedBoden] = useState(boeden[0])
-  const [selectedBelaege, setSelectedBelaege] = useState<string[]>([])
-  const [showCakeResult, setShowCakeResult] = useState(false)
+  // Mouse Trail
+  const [mouseTrail, setMouseTrail] = useState<{ x: number; y: number; id: number }[]>([])
+  
+  // Quiz State
+  const [quizStarted, setQuizStarted] = useState(false)
+  const [currentQuestion, setCurrentQuestion] = useState(0)
+  const [quizAnswers, setQuizAnswers] = useState<string[]>([])
+  const [quizResult, setQuizResult] = useState<typeof torten[0] | null>(null)
+  
+  // Seasonal Theme
+  const [season, setSeason] = useState<Season>('default')
+  
+  // Audio Context für Sound-Effekte
+  const audioContextRef = useRef<AudioContext | null>(null)
 
   useEffect(() => {
+    // Set season
+    setSeason(getSeason())
+    
     // Loading Animation
     const loadTimer = setTimeout(() => {
       setIsLoading(false)
@@ -81,6 +185,29 @@ export default function Home() {
     }
   }, [])
 
+  // Mouse Trail Effect
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const newHeart = {
+        x: e.clientX,
+        y: e.clientY,
+        id: Date.now()
+      }
+      setMouseTrail(prev => [...prev.slice(-15), newHeart])
+    }
+
+    window.addEventListener('mousemove', handleMouseMove)
+    return () => window.removeEventListener('mousemove', handleMouseMove)
+  }, [])
+
+  // Remove old hearts
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMouseTrail(prev => prev.slice(-10))
+    }, 100)
+    return () => clearInterval(interval)
+  }, [])
+
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add('dark')
@@ -91,6 +218,36 @@ export default function Home() {
       localStorage.setItem('darkMode', String(darkMode))
     }
   }, [darkMode])
+
+  // Sound Effect - "Mjam"
+  const playMjamSound = useCallback(() => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      }
+      const ctx = audioContextRef.current
+      
+      // Create a fun "Mjam" sound
+      const oscillator = ctx.createOscillator()
+      const gainNode = ctx.createGain()
+      
+      oscillator.connect(gainNode)
+      gainNode.connect(ctx.destination)
+      
+      oscillator.frequency.setValueAtTime(400, ctx.currentTime)
+      oscillator.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1)
+      oscillator.frequency.exponentialRampToValueAtTime(350, ctx.currentTime + 0.2)
+      
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime)
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3)
+      
+      oscillator.start(ctx.currentTime)
+      oscillator.stop(ctx.currentTime + 0.3)
+    } catch (e) {
+      // Audio not supported
+      console.log('Audio not supported')
+    }
+  }, [])
 
   const scrollToGallery = () => {
     galleryRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -103,6 +260,7 @@ export default function Home() {
   const openCake = (cake: typeof torten[0]) => {
     setSelectedCake(cake)
     document.body.style.overflow = 'hidden'
+    playMjamSound()
   }
 
   const closeCake = () => {
@@ -110,29 +268,47 @@ export default function Home() {
     document.body.style.overflow = 'auto'
   }
 
-  const toggleBelag = (belagId: string) => {
-    if (selectedBelaege.includes(belagId)) {
-      setSelectedBelaege(selectedBelaege.filter(id => id !== belagId))
-    } else if (selectedBelaege.length < 4) {
-      setSelectedBelaege([...selectedBelaege, belagId])
+  // Quiz Logic
+  const startQuiz = () => {
+    setQuizStarted(true)
+    setCurrentQuestion(0)
+    setQuizAnswers([])
+    setQuizResult(null)
+  }
+
+  const answerQuestion = (cake: string) => {
+    const newAnswers = [...quizAnswers, cake]
+    setQuizAnswers(newAnswers)
+    
+    if (currentQuestion < quizQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1)
+    } else {
+      // Calculate result - most frequent cake
+      const counts = newAnswers.reduce((acc, cake) => {
+        acc[cake] = (acc[cake] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
+      
+      const result = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0]
+      const foundCake = torten.find(t => t.name === result)
+      setQuizResult(foundCake || torten[0])
+      playMjamSound()
     }
   }
 
-  const createCake = () => {
-    if (selectedBelaege.length > 0) {
-      setShowCakeResult(true)
-    }
+  const resetQuiz = () => {
+    setQuizStarted(false)
+    setCurrentQuestion(0)
+    setQuizAnswers([])
+    setQuizResult(null)
   }
 
-  const resetCake = () => {
-    setSelectedBelaege([])
-    setShowCakeResult(false)
-  }
+  const currentSeason = seasonConfig[season]
 
   // Loading Screen
   if (isLoading) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-rose-100 to-amber-50">
+      <div className={`fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-${currentSeason.colors.primary}-100 to-${currentSeason.colors.secondary}-50`}>
         <div className="text-center animate-fade-in">
           <div className="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-6 animate-bounce-slow">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -142,13 +318,14 @@ export default function Home() {
               className="w-full h-full object-contain drop-shadow-2xl"
             />
           </div>
-          <h1 className="font-great-vibes text-3xl md:text-4xl text-rose-800 mb-4">
+          <h1 className={`font-great-vibes text-3xl md:text-4xl text-${currentSeason.colors.primary}-800 mb-2`}>
             Nathalies Tortenwelt
           </h1>
+          <p className="font-cormorant text-xl mb-4 text-rose-600">{currentSeason.greeting}</p>
           <div className="flex justify-center gap-2">
-            <span className="w-3 h-3 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-            <span className="w-3 h-3 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-            <span className="w-3 h-3 bg-rose-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+            <span className={`w-3 h-3 bg-${currentSeason.colors.primary}-400 rounded-full animate-bounce`} style={{ animationDelay: '0ms' }}></span>
+            <span className={`w-3 h-3 bg-${currentSeason.colors.primary}-400 rounded-full animate-bounce`} style={{ animationDelay: '150ms' }}></span>
+            <span className={`w-3 h-3 bg-${currentSeason.colors.primary}-400 rounded-full animate-bounce`} style={{ animationDelay: '300ms' }}></span>
           </div>
         </div>
         <style jsx global>{`
@@ -170,6 +347,42 @@ export default function Home() {
   return (
     <div className={`min-h-screen transition-colors duration-500 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-b from-rose-50 via-amber-50/20 to-rose-50/30'} overflow-x-hidden`}>
       
+      {/* Mouse Trail Hearts */}
+      {mouseTrail.map((heart, index) => (
+        <div
+          key={heart.id}
+          className="fixed pointer-events-none z-[100] animate-heart-fade"
+          style={{
+            left: heart.x - 10,
+            top: heart.y - 10,
+            opacity: 1 - (index * 0.05),
+            transform: `scale(${1 - index * 0.05})`,
+          }}
+        >
+          <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
+        </div>
+      ))}
+      
+      {/* Seasonal Decorations */}
+      {currentSeason.decorations.length > 0 && (
+        <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+          {currentSeason.decorations.map((emoji, i) => (
+            <div
+              key={i}
+              className="absolute text-4xl animate-float-slow opacity-30"
+              style={{
+                left: `${10 + i * 20}%`,
+                top: `${20 + (i % 3) * 25}%`,
+                animationDelay: `${i * 0.5}s`,
+                animationDuration: `${8 + i}s`,
+              }}
+            >
+              {emoji}
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Loading Overlay Fade Out */}
       <div className={`fixed inset-0 z-[90] pointer-events-none bg-gradient-to-b from-rose-100 to-amber-50 transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0'}`} />
       
@@ -178,7 +391,7 @@ export default function Home() {
         href="https://instagram.com/nathalies_tortenwelt"
         target="_blank"
         rel="noopener noreferrer"
-        className={`fixed right-4 md:right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 bg-gradient-to-b from-pink-500 via-rose-500 to-orange-400 text-white p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 group`}
+        className="fixed right-4 md:right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 bg-gradient-to-b from-pink-500 via-rose-500 to-orange-400 text-white p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 group"
         aria-label="Instagram"
       >
         <Instagram className="w-6 h-6 md:w-7 md:h-7 group-hover:rotate-12 transition-transform duration-300" />
@@ -202,6 +415,28 @@ export default function Home() {
       >
         <ChevronUp className="w-6 h-6 md:w-7 md:h-7" />
       </button>
+
+      {/* Parallax Floating Cakes */}
+      <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+        {torten.slice(0, 5).map((torte, index) => (
+          <div
+            key={index}
+            className="absolute opacity-10 transition-transform duration-100"
+            style={{
+              left: `${5 + index * 18}%`,
+              top: `${10 + (index % 3) * 30}%`,
+              transform: `translateY(${scrollY * (0.1 + index * 0.05)}px) rotate(${scrollY * 0.02}deg)`,
+            }}
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/images/${torte.file}`}
+              alt=""
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+            />
+          </div>
+        ))}
+      </div>
       
       {/* Fullscreen Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
@@ -280,6 +515,13 @@ export default function Home() {
               <p className={`font-cormorant text-2xl md:text-3xl lg:text-4xl font-bold max-w-lg transition-colors duration-500 ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}>
                 Jede Torte ein Unikat, gebacken mit Herz und Seele
               </p>
+              
+              {/* Seasonal Greeting */}
+              {season !== 'default' && (
+                <p className={`mt-4 font-cormorant text-xl italic ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
+                  ✨ {currentSeason.greeting}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -319,12 +561,19 @@ export default function Home() {
                 key={index}
                 onClick={() => openCake(torte)}
                 className={`group relative backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border cursor-pointer ${darkMode ? 'bg-gray-800/70 border-gray-700/50 hover:border-rose-500/30' : 'bg-white/70 border-rose-100/50 hover:border-rose-300/50'}`}
+                style={{ perspective: '1000px' }}
               >
                 {/* Glow effect on hover */}
-                <div className={`absolute inset-0 rounded-3xl transition-all duration-500 ${darkMode ? 'group-hover:from-rose-900/20 group-hover:to-amber-900/20' : 'group-hover:from-rose-200/20 group-hover:to-amber-200/20'} bg-gradient-to-br from-transparent to-transparent group-hover:from-rose-200/0 group-hover:to-amber-200/0`} />
+                <div className={`absolute inset-0 rounded-3xl transition-all duration-500 ${darkMode ? 'group-hover:from-rose-900/20 group-hover:to-amber-900/20' : 'group-hover:from-rose-200/20 group-hover:to-amber-200/20'} bg-gradient-to-br from-transparent to-transparent`} />
                 
-                {/* Cake Image Container */}
-                <div className="relative w-full aspect-square mb-4 overflow-visible">
+                {/* Cake Image Container with 3D Effect */}
+                <div 
+                  className="relative w-full aspect-square mb-4 overflow-visible transition-transform duration-500 group-hover:rotate-y-12 group-hover:rotate-x-3"
+                  style={{ 
+                    transformStyle: 'preserve-3d',
+                    transform: 'rotateX(0deg) rotateY(0deg)',
+                  }}
+                >
                   {/* Background gradient */}
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${darkMode ? 'bg-gradient-to-br from-gray-700/40 to-gray-600/40' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
                   
@@ -334,7 +583,11 @@ export default function Home() {
                     <img
                       src={`/images/${torte.file}`}
                       alt={torte.name}
-                      className="w-full h-full object-contain p-4 md:p-6 drop-shadow-lg"
+                      className="w-full h-full object-contain p-4 md:p-6 drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-500"
+                      style={{ 
+                        transform: 'translateZ(20px)',
+                        backfaceVisibility: 'hidden'
+                      }}
                     />
                   </div>
                 </div>
@@ -378,7 +631,7 @@ export default function Home() {
             <div className="flex flex-col md:flex-row">
               {/* Bild */}
               <div className={`w-full md:w-1/2 p-6 md:p-10 flex items-center justify-center ${darkMode ? 'bg-gradient-to-br from-gray-700 to-gray-800' : 'bg-gradient-to-br from-rose-50 to-amber-50'}`}>
-                <div className="relative w-full max-w-md aspect-square">
+                <div className="relative w-full max-w-md aspect-square animate-cake-bounce">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/images/${selectedCake.file}`}
@@ -414,158 +667,116 @@ export default function Home() {
         </div>
       )}
 
-      {/* Minigame Section */}
+      {/* Quiz Section */}
       <section className={`py-20 md:py-28 px-4 md:px-6 ${darkMode ? 'bg-gray-800/50' : 'bg-gradient-to-b from-rose-100/40 to-amber-100/40'}`}>
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           {/* Section Title */}
           <div className="text-center mb-12">
             <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-4 transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
-              Kreiere deine Torte
+              Welche Torte passt zu dir?
             </h2>
             <div className="flex items-center justify-center gap-3 mb-5">
               <span className="w-16 h-px bg-rose-300/60" />
-              <Cake className={`w-6 h-6 ${darkMode ? 'text-rose-500' : 'text-rose-400'}`} />
+              <Sparkles className={`w-6 h-6 ${darkMode ? 'text-rose-500' : 'text-rose-400'}`} />
               <span className="w-16 h-px bg-rose-300/60" />
             </div>
             <p className={`font-cormorant text-2xl md:text-3xl max-w-xl mx-auto transition-colors duration-500 ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
-              Stelle deine eigene Traum-Torte zusammen!
+              Finde deine perfekte Traum-Torte!
             </p>
           </div>
 
           <div className={`rounded-3xl p-6 md:p-10 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Torte Preview */}
-              <div className="flex flex-col items-center justify-center">
-                <div className="relative w-64 h-64 md:w-80 md:h-80">
-                  {/* Torte Base */}
-                  <div className={`absolute bottom-0 left-1/2 -translate-x-1/2 w-56 h-48 md:w-72 md:h-56 rounded-t-3xl ${selectedBoden.color} shadow-2xl transition-all duration-500`}>
-                    {/* Torte Layers */}
-                    <div className={`absolute top-0 left-0 w-full h-1/2 rounded-t-3xl ${selectedBoden.color} opacity-80`}></div>
-                    <div className={`absolute top-1/4 left-0 w-full h-3/4 rounded-t-3xl ${selectedBoden.color} opacity-60`}></div>
-                    
-                    {/* Beläge */}
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 flex flex-wrap justify-center gap-2 max-w-[200px]">
-                      {selectedBelaege.map((belagId, idx) => {
-                        const belag = belaege.find(b => b.id === belagId)
-                        return (
-                          <span 
-                            key={idx} 
-                            className="text-4xl md:text-5xl animate-bounce-slow"
-                            style={{ animationDelay: `${idx * 0.2}s` }}
-                          >
-                            {belag?.emoji}
-                          </span>
-                        )
-                      })}
-                    </div>
-                    
-                    {/* Deko */}
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2 w-40 h-8 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full"></div>
-                  </div>
-                </div>
-                
-                <p className={`mt-6 font-cormorant text-xl md:text-2xl font-semibold ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}>
-                  {selectedBoden.name} mit {selectedBelaege.length > 0 ? selectedBelaege.map(id => belaege.find(b => b.id === id)?.name).join(', ') : '...'}
+            {!quizStarted && !quizResult ? (
+              // Start Screen
+              <div className="text-center">
+                <div className="text-6xl mb-6">🎂✨🍰</div>
+                <h3 className={`font-great-vibes text-3xl md:text-4xl mb-6 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
+                  Entdecke deine Traumsorte!
+                </h3>
+                <p className={`font-cormorant text-xl mb-8 ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}>
+                  Beantworte 5 kurze Fragen und erfahre, welche Torte perfekt zu dir passt.
                 </p>
+                <button
+                  onClick={startQuiz}
+                  className="bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-10 py-4 rounded-full font-semibold text-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                >
+                  Quiz starten! 🎉
+                </button>
               </div>
-
-              {/* Controls */}
-              <div className="space-y-8">
-                {/* Boden Auswahl */}
-                <div>
-                  <h3 className={`font-cormorant text-xl md:text-2xl font-semibold mb-4 ${darkMode ? 'text-rose-200' : 'text-rose-800'}`}>
-                    Wähle deinen Boden:
-                  </h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    {boeden.map((boden) => (
-                      <button
-                        key={boden.id}
-                        onClick={() => setSelectedBoden(boden)}
-                        className={`p-3 rounded-xl border-2 transition-all duration-300 font-medium ${selectedBoden.id === boden.id 
-                          ? `${boden.color} text-white border-transparent shadow-lg scale-105` 
-                          : `${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200 hover:border-rose-400' : 'bg-gray-100 border-gray-200 text-gray-700 hover:border-rose-400'}`}`}
-                      >
-                        {boden.name}
-                      </button>
-                    ))}
-                  </div>
+            ) : quizResult ? (
+              // Result Screen
+              <div className="text-center">
+                <div className="text-4xl mb-4">🎉 Deine perfekte Torte! 🎉</div>
+                <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-6 animate-cake-bounce">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/images/${quizResult.file}`}
+                    alt={quizResult.name}
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                  />
                 </div>
-
-                {/* Belag Auswahl */}
-                <div>
-                  <h3 className={`font-cormorant text-xl md:text-2xl font-semibold mb-4 ${darkMode ? 'text-rose-200' : 'text-rose-800'}`}>
-                    Wähle bis zu 4 Beläge:
-                  </h3>
-                  <div className="grid grid-cols-4 gap-3">
-                    {belaege.map((belag) => (
-                      <button
-                        key={belag.id}
-                        onClick={() => toggleBelag(belag.id)}
-                        disabled={!selectedBelaege.includes(belag.id) && selectedBelaege.length >= 4}
-                        className={`p-3 rounded-xl border-2 transition-all duration-300 text-center ${selectedBelaege.includes(belag.id) 
-                          ? `${darkMode ? 'bg-rose-600 border-rose-500' : 'bg-rose-100 border-rose-400'} scale-105 shadow-lg` 
-                          : `${darkMode ? 'bg-gray-700 border-gray-600 hover:border-rose-400' : 'bg-gray-100 border-gray-200 hover:border-rose-400'} ${selectedBelaege.length >= 4 ? 'opacity-50' : ''}`}`}
-                      >
-                        <span className="text-2xl md:text-3xl">{belag.emoji}</span>
-                        <p className={`text-xs mt-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{belag.name}</p>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex gap-4">
-                  <button
-                    onClick={createCake}
-                    disabled={selectedBelaege.length === 0}
-                    className={`flex-1 py-4 rounded-full font-semibold text-lg transition-all duration-300 ${selectedBelaege.length > 0 
-                      ? 'bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white shadow-xl hover:shadow-2xl hover:scale-105' 
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                <h3 className={`font-great-vibes text-4xl md:text-5xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
+                  {quizResult.name}
+                </h3>
+                <p className={`font-cormorant text-xl mb-8 ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}>
+                  {quizResult.description}
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <a
+                    href="https://instagram.com/nathalies_tortenwelt"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-8 py-3 rounded-full font-semibold hover:scale-105 transition-transform"
                   >
-                    🎂 Torte erstellen!
-                  </button>
+                    <Instagram className="w-5 h-5" />
+                    Jetzt bestellen!
+                  </a>
                   <button
-                    onClick={resetCake}
-                    className={`px-6 py-4 rounded-full font-semibold transition-all duration-300 ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                    onClick={resetQuiz}
+                    className={`px-8 py-3 rounded-full font-semibold ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                   >
-                    Reset
+                    Nochmal spielen
                   </button>
                 </div>
               </div>
-            </div>
+            ) : (
+              // Question Screen
+              <div>
+                {/* Progress */}
+                <div className="flex justify-center gap-2 mb-8">
+                  {quizQuestions.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`w-3 h-3 rounded-full transition-colors ${
+                        i < currentQuestion ? 'bg-rose-500' : i === currentQuestion ? 'bg-rose-400' : darkMode ? 'bg-gray-600' : 'bg-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
 
-            {/* Result Modal */}
-            {showCakeResult && (
-              <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                <div className={`max-w-md w-full rounded-3xl p-8 text-center animate-modal-in ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-                  <div className="text-6xl mb-4">🎉🎂🎉</div>
-                  <h3 className={`font-great-vibes text-4xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
-                    Deine Traum-Torte!
-                  </h3>
-                  <p className={`font-cormorant text-xl mb-6 ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}>
-                    Eine köstliche <strong>{selectedBoden.name}-Torte</strong> mit {selectedBelaege.map(id => belaege.find(b => b.id === id)?.name).join(', ')}
-                  </p>
-                  <p className={`font-cormorant text-lg italic mb-8 ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
-                    Gefällt dir das? Kontaktiere mich auf Instagram und ich backe sie für dich!
-                  </p>
-                  <div className="flex gap-4 justify-center">
-                    <a
-                      href="https://instagram.com/nathalies_tortenwelt"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-6 py-3 rounded-full font-semibold hover:scale-105 transition-transform"
-                    >
-                      <Instagram className="w-5 h-5" />
-                      Instagram
-                    </a>
+                <h3 className={`font-cormorant text-2xl md:text-3xl text-center mb-8 ${darkMode ? 'text-rose-200' : 'text-rose-800'}`}>
+                  {quizQuestions[currentQuestion].question}
+                </h3>
+
+                <div className="grid gap-4">
+                  {quizQuestions[currentQuestion].answers.map((answer, i) => (
                     <button
-                      onClick={resetCake}
-                      className={`px-6 py-3 rounded-full font-semibold ${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+                      key={i}
+                      onClick={() => answerQuestion(answer.cake)}
+                      className={`p-4 rounded-2xl border-2 text-left transition-all duration-300 hover:scale-102 ${
+                        darkMode 
+                          ? 'bg-gray-700 border-gray-600 hover:border-rose-400 hover:bg-gray-600 text-gray-200' 
+                          : 'bg-gray-50 border-gray-200 hover:border-rose-400 hover:bg-rose-50 text-gray-700'
+                      }`}
                     >
-                      Neue Torte
+                      <span className="font-cormorant text-lg md:text-xl">{answer.text}</span>
                     </button>
-                  </div>
+                  ))}
                 </div>
+
+                <p className={`text-center mt-6 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Frage {currentQuestion + 1} von {quizQuestions.length}
+                </p>
               </div>
             )}
           </div>
@@ -651,6 +862,18 @@ export default function Home() {
           animation: float 4s ease-in-out infinite;
         }
         
+        @keyframes float-slow {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          50% {
+            transform: translateY(-20px) rotate(10deg);
+          }
+        }
+        .animate-float-slow {
+          animation: float-slow 8s ease-in-out infinite;
+        }
+        
         @keyframes modal-in {
           0% {
             opacity: 0;
@@ -665,21 +888,49 @@ export default function Home() {
           animation: modal-in 0.3s ease-out forwards;
         }
         
+        @keyframes heart-fade {
+          0% {
+            opacity: 1;
+            transform: scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: scale(0.5) translateY(-20px);
+          }
+        }
+        .animate-heart-fade {
+          animation: heart-fade 0.8s ease-out forwards;
+        }
+        
+        @keyframes cake-bounce {
+          0%, 100% {
+            transform: scale(1) rotate(0deg);
+          }
+          25% {
+            transform: scale(1.05) rotate(-2deg);
+          }
+          50% {
+            transform: scale(1.1) rotate(0deg);
+          }
+          75% {
+            transform: scale(1.05) rotate(2deg);
+          }
+        }
+        .animate-cake-bounce {
+          animation: cake-bounce 2s ease-in-out infinite;
+        }
+        
         .writing-vertical {
           writing-mode: vertical-rl;
           text-orientation: mixed;
         }
         
-        @keyframes bounce-slow {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-5px);
-          }
+        .hover\\:rotate-y-12:hover {
+          transform: perspective(1000px) rotateY(12deg) rotateX(3deg);
         }
-        .animate-bounce-slow {
-          animation: bounce-slow 2s ease-in-out infinite;
+        
+        .hover\\:scale-102:hover {
+          transform: scale(1.02);
         }
       `}</style>
     </div>
