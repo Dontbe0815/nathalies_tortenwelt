@@ -1,9 +1,15 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Cake, Sparkles, Share2, MessageCircle, Facebook } from 'lucide-react'
+import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Sparkles, Share2, MessageCircle, Facebook } from 'lucide-react'
 
-const torten = [
+interface Torte {
+  name: string
+  file: string
+  description: string
+}
+
+const torten: Torte[] = [
   { name: 'Cappuccino Nuss Torte', file: 'cappuccino-nuss-torte.png', description: 'Eine köstliche Kombination aus feinem Cappuccino und knackigen Nüssen. Ein Genuss für Kaffee-Liebhaber!' },
   { name: 'Erdbeer Torte', file: 'erdbeer-torte.png', description: 'Fruchtige Frische mit saftigen Erdbeeren auf cremiger Basis. Perfekt für den Sommer!' },
   { name: 'Himbeer Torte', file: 'himbeer-torte.png', description: 'Intensiver Himbeergeschmack mit einer perfekten Balance aus Süße und Säure.' },
@@ -17,8 +23,12 @@ const torten = [
   { name: 'Überraschungs Torte', file: 'mystery.png', description: 'Lass dich überraschen! Eine einzigartige Kreation, die jedes Mal neu begeistert.' },
 ]
 
-// Quiz Fragen
-const quizQuestions = [
+interface QuizQuestion {
+  question: string
+  answers: Array<{ text: string; cake: string }>
+}
+
+const quizQuestions: QuizQuestion[] = [
   {
     question: "Wie sieht dein perfekter Sonntag aus?",
     answers: [
@@ -66,7 +76,6 @@ const quizQuestions = [
   },
 ]
 
-// Seasonal Themes
 type Season = 'default' | 'valentine' | 'easter' | 'christmas'
 
 const getSeason = (): Season => {
@@ -81,10 +90,16 @@ const getSeason = (): Season => {
   return 'default'
 }
 
-const seasonConfig = {
+interface SeasonConfig {
+  name: string
+  decorations: string[]
+  greeting: string
+}
+
+const seasonConfig: Record<Season, SeasonConfig> = {
   default: {
     name: 'Klassisch',
-    decorations: [] as string[],
+    decorations: [],
     greeting: 'Willkommen!',
   },
   valentine: {
@@ -109,46 +124,39 @@ const Confetti = ({ active }: { active: boolean }) => {
   if (!active) return null
   
   const colors = ['#f472b6', '#fb923c', '#fbbf24', '#a3e635', '#38bdf8', '#c084fc']
-  const confettiPieces = Array.from({ length: 100 }, (_, i) => ({
-    id: i,
-    left: Math.random() * 100,
-    delay: Math.random() * 2,
-    duration: 2 + Math.random() * 3,
-    color: colors[Math.floor(Math.random() * colors.length)],
-    size: 5 + Math.random() * 10,
-  }))
-
+  
   return (
     <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
-      {confettiPieces.map((piece) => (
-        <div
-          key={piece.id}
-          className="absolute animate-confetti"
-          style={{
-            left: `${piece.left}%`,
-            top: '-20px',
-            width: piece.size,
-            height: piece.size * 0.6,
-            backgroundColor: piece.color,
-            borderRadius: Math.random() > 0.5 ? '50%' : '0',
-            animationDelay: `${piece.delay}s`,
-            animationDuration: `${piece.duration}s`,
-          }}
-        />
-      ))}
+      {Array.from({ length: 100 }, (_, i) => {
+        const left = Math.random() * 100
+        const delay = Math.random() * 2
+        const duration = 2 + Math.random() * 3
+        const color = colors[Math.floor(Math.random() * colors.length)]
+        const size = 5 + Math.random() * 10
+        
+        return (
+          <div
+            key={i}
+            className="absolute animate-confetti"
+            style={{
+              left: `${left}%`,
+              top: '-20px',
+              width: size,
+              height: size * 0.6,
+              backgroundColor: color,
+              borderRadius: Math.random() > 0.5 ? '50%' : '0',
+              animationDelay: `${delay}s`,
+              animationDuration: `${duration}s`,
+            }}
+          />
+        )
+      })}
     </div>
   )
 }
 
-// Sparkle Component
-const Sparkle = ({ className }: { className?: string }) => (
-  <div className={`absolute pointer-events-none ${className}`}>
-    <div className="sparkle" />
-  </div>
-)
-
 // Typewriter Component
-const Typewriter = ({ text, delay = 50, className }: { text: string; delay?: number; className?: string }) => {
+const Typewriter = ({ text, delay = 50 }: { text: string; delay?: number }) => {
   const [displayText, setDisplayText] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -162,7 +170,7 @@ const Typewriter = ({ text, delay = 50, className }: { text: string; delay?: num
     }
   }, [currentIndex, text, delay])
 
-  return <span className={className}>{displayText}<span className="animate-blink">|</span></span>
+  return <span>{displayText}<span className="animate-blink">|</span></span>
 }
 
 export default function Home() {
@@ -170,11 +178,12 @@ export default function Home() {
   const [isVisible, setIsVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [selectedCake, setSelectedCake] = useState<typeof torten[0] | null>(null)
+  const [selectedCake, setSelectedCake] = useState<Torte | null>(null)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
   const galleryRef = useRef<HTMLDivElement>(null)
+  const [scrollProgress, setScrollProgress] = useState(0)
   
   // Confetti State
   const [showConfetti, setShowConfetti] = useState(false)
@@ -183,7 +192,7 @@ export default function Home() {
   const [quizStarted, setQuizStarted] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [quizAnswers, setQuizAnswers] = useState<string[]>([])
-  const [quizResult, setQuizResult] = useState<typeof torten[0] | null>(null)
+  const [quizResult, setQuizResult] = useState<Torte | null>(null)
   
   // Seasonal Theme
   const [season, setSeason] = useState<Season>('default')
@@ -202,7 +211,7 @@ export default function Home() {
   useEffect(() => {
     setSeason(getSeason())
     
-    // Loading Animation with stacking cakes
+    // Loading Animation
     const progressInterval = setInterval(() => {
       setLoadingProgress(prev => {
         if (prev >= 100) {
@@ -221,6 +230,11 @@ export default function Home() {
     const handleScroll = () => {
       setScrollY(window.scrollY)
       setShowBackToTop(window.scrollY > 500)
+      
+      // Calculate scroll progress
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight
+      const progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0
+      setScrollProgress(Math.min(progress, 100))
     }
     
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -271,7 +285,7 @@ export default function Home() {
       
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + 0.3)
-    } catch (e) {
+    } catch {
       console.log('Audio not supported')
     }
   }, [])
@@ -289,7 +303,7 @@ export default function Home() {
     setTimeout(() => setShowConfetti(false), 5000)
   }
 
-  const openCake = (cake: typeof torten[0]) => {
+  const openCake = (cake: Torte) => {
     setSelectedCake(cake)
     document.body.style.overflow = 'hidden'
     playMjamSound()
@@ -338,8 +352,8 @@ export default function Home() {
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
     } else {
-      const counts = newAnswers.reduce((acc, cake) => {
-        acc[cake] = (acc[cake] || 0) + 1
+      const counts = newAnswers.reduce((acc, c) => {
+        acc[c] = (acc[c] || 0) + 1
         return acc
       }, {} as Record<string, number>)
       
@@ -375,11 +389,10 @@ export default function Home() {
   }
 
   const currentSeason = seasonConfig[season]
+  const loadingCakes = torten.slice(0, 5)
 
-  // Loading Screen with Stacking Cakes
+  // Loading Screen
   if (isLoading) {
-    const loadingCakes = torten.slice(0, 5)
-    
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-rose-100 to-amber-50 overflow-hidden">
         {/* Stacking Cakes Animation */}
@@ -419,7 +432,7 @@ export default function Home() {
         </div>
 
         {/* Glitzer Effects */}
-        {[...Array(20)].map((_, i) => (
+        {Array.from({ length: 20 }, (_, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-amber-400 rounded-full animate-sparkle"
@@ -465,7 +478,7 @@ export default function Home() {
       <div className="fixed top-0 left-0 right-0 h-1 z-[100] bg-gray-200/30">
         <div 
           className="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 transition-all duration-100"
-          style={{ width: `${Math.min((scrollY / (document.body.scrollHeight - window.innerHeight)) * 100, 100)}%` }}
+          style={{ width: `${scrollProgress}%` }}
         />
       </div>
 
@@ -504,7 +517,7 @@ export default function Home() {
         <span className="hidden md:block text-xs font-medium writing-vertical">Instagram</span>
       </a>
 
-      {/* Dark Mode Toggle with Animation */}
+      {/* Dark Mode Toggle */}
       <button
         onClick={toggleDarkMode}
         className={`fixed left-4 md:left-6 top-1/2 -translate-y-1/2 z-50 p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-500 ${isTransitioning ? 'animate-day-night' : ''} ${darkMode ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-yellow-400'}`}
@@ -536,22 +549,17 @@ export default function Home() {
               transform: `translateY(${scrollY * (0.1 + index * 0.05)}px) rotate(${scrollY * 0.02}deg)`,
             }}
           >
-            {/* Glitzer around parallax cakes */}
-            <div className="relative">
-              <Sparkle className="absolute -top-2 -left-2 animate-sparkle" />
-              <Sparkle className="absolute -top-2 -right-2 animate-sparkle" style={{ animationDelay: '0.5s' } as React.CSSProperties} />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={`/images/${torte.file}`}
-                alt=""
-                className="w-24 h-24 md:w-32 md:h-32 object-contain"
-              />
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={`/images/${torte.file}`}
+              alt=""
+              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+            />
           </div>
         ))}
       </div>
       
-      {/* Fullscreen Hero Section */}
+      {/* Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         
         {/* Background Logo */}
@@ -570,7 +578,7 @@ export default function Home() {
         {/* Gradient Overlay */}
         <div className={`absolute inset-0 z-10 transition-colors duration-700 ${darkMode ? 'bg-gradient-to-b from-gray-900/80 via-transparent to-gray-900/80' : 'bg-gradient-to-b from-rose-50/60 via-transparent to-rose-50/80'}`} />
 
-        {/* Floating decorative elements */}
+        {/* Floating elements */}
         <div className="absolute inset-0 pointer-events-none z-20">
           <div 
             className={`absolute top-[15%] left-[10%] w-24 h-24 md:w-32 md:h-32 rounded-full blur-3xl animate-pulse ${darkMode ? 'bg-rose-900/30' : 'bg-rose-300/30'}`}
@@ -589,26 +597,23 @@ export default function Home() {
         >
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
             
-            {/* Logo with Glitzer - Clickable for Easter Egg */}
+            {/* Logo with Glitzer */}
             <div 
               className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] flex-shrink-0 animate-float cursor-pointer group"
               onClick={handleLogoClick}
             >
-              {/* Glitzer effects around logo */}
-              <div className="absolute inset-0 pointer-events-none">
-                {[...Array(12)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
-                    style={{
-                      left: `${20 + Math.random() * 60}%`,
-                      top: `${20 + Math.random() * 60}%`,
-                      animationDelay: `${i * 0.3}s`,
-                      boxShadow: '0 0 6px 2px rgba(251, 191, 36, 0.6)',
-                    }}
-                  />
-                ))}
-              </div>
+              {/* Glitzer effects */}
+              {Array.from({ length: 12 }, (_, i) => (
+                <div
+                  key={i}
+                  className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
+                  style={{
+                    left: `${20 + (i * 5) % 60}%`,
+                    top: `${20 + (i * 7) % 60}%`,
+                    animationDelay: `${i * 0.3}s`,
+                  }}
+                />
+              ))}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/logo.png"
@@ -622,7 +627,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Text with Typewriter */}
+            {/* Text */}
             <div className="text-center md:text-left">
               <h1 className={`font-great-vibes text-6xl md:text-7xl lg:text-8xl mb-3 tracking-wide transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
                 {isVisible && <Typewriter text="Nathalies Tortenwelt" delay={80} />}
@@ -630,7 +635,7 @@ export default function Home() {
               
               <div className="flex items-center justify-center md:justify-start gap-3 my-5">
                 <span className="w-20 md:w-28 h-px bg-gradient-to-r from-transparent to-amber-400/60" />
-                <Heart className={`w-6 h-6 transition-colors duration-500 ${darkMode ? 'text-rose-400' : 'text-rose-400'} fill-rose-400`} />
+                <Heart className={`w-6 h-6 ${darkMode ? 'text-rose-400' : 'text-rose-400'} fill-rose-400`} />
                 <span className="w-20 md:w-28 h-px bg-gradient-to-l from-transparent to-amber-400/60" />
               </div>
 
@@ -660,23 +665,19 @@ export default function Home() {
         </button>
       </section>
 
-      {/* Gallery Section with Morphing Transition */}
+      {/* Gallery Section */}
       <section 
         ref={galleryRef} 
         className={`py-20 md:py-28 px-4 md:px-6 lg:px-8 transition-all duration-700 ${darkMode ? 'bg-gray-800/50' : 'bg-gradient-to-b from-rose-100/40 to-amber-100/40'}`}
-        style={{ 
-          clipPath: 'polygon(0 5%, 100% 0, 100% 95%, 0 100%)',
-        }}
       >
         <div className="max-w-7xl mx-auto pt-10">
-          {/* Section Title */}
           <div className="text-center mb-16 md:mb-20">
             <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-4 transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
               Meine Kreationen
             </h2>
             <div className="flex items-center justify-center gap-3 mb-5">
               <span className="w-16 h-px bg-rose-300/60" />
-              <Heart className={`w-5 h-5 transition-colors duration-500 ${darkMode ? 'text-rose-500' : 'text-rose-400'} fill-current`} />
+              <Heart className={`w-5 h-5 ${darkMode ? 'text-rose-500' : 'text-rose-400'} fill-current`} />
               <span className="w-16 h-px bg-rose-300/60" />
             </div>
             <p className={`font-cormorant text-2xl md:text-3xl max-w-xl mx-auto transition-colors duration-500 ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
@@ -684,17 +685,16 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Gallery Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8 lg:gap-10">
             {torten.map((torte, index) => (
               <div
                 key={index}
                 onClick={() => openCake(torte)}
-                className={`group relative backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border cursor-pointer ${darkMode ? 'bg-gray-800/70 border-gray-700/50 hover:border-rose-500/30' : 'bg-white/70 border-rose-100/50 hover:border-rose-300/50'}`}
+                className={`group relative backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 border cursor-pointer ${darkMode ? 'bg-gray-800/70 border-gray-700/50 hover:border-rose-500/30' : 'bg-white/70 border-rose-100/50 hover:border-rose-300/50'}`}
               >
                 {/* Glitzer on hover */}
                 <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  {[...Array(6)].map((_, i) => (
+                  {Array.from({ length: 6 }, (_, i) => (
                     <div
                       key={i}
                       className="absolute w-1 h-1 bg-amber-400 rounded-full animate-sparkle"
@@ -707,7 +707,6 @@ export default function Home() {
                   ))}
                 </div>
                 
-                {/* Cake Image */}
                 <div className="relative w-full aspect-square mb-4 overflow-visible">
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${darkMode ? 'bg-gradient-to-br from-gray-700/40 to-gray-600/40' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
                   <div className="transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2">
@@ -723,10 +722,6 @@ export default function Home() {
                 <h3 className={`font-cormorant text-2xl md:text-3xl text-center transition-colors duration-300 relative z-10 font-semibold ${darkMode ? 'text-rose-200 group-hover:text-rose-100' : 'text-rose-800 group-hover:text-rose-900'}`}>
                   {torte.name}
                 </h3>
-
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <span className={`text-sm font-medium ${darkMode ? 'text-rose-400' : 'text-rose-500'}`}>Klicken für Details</span>
-                </div>
               </div>
             ))}
           </div>
@@ -741,13 +736,12 @@ export default function Home() {
               Vergleiche Torten
             </h2>
             <p className={`font-cormorant text-xl md:text-2xl ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
-              Stelle zwei Torten gegenüber und entscheide dich!
+              Stelle zwei Torten gegenüber!
             </p>
           </div>
 
           <div className={`rounded-3xl p-6 md:p-10 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="grid md:grid-cols-2 gap-8 items-center">
-              {/* Left Cake */}
               <div className="text-center">
                 <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -771,12 +765,10 @@ export default function Home() {
                 </select>
               </div>
 
-              {/* VS */}
               <div className="hidden md:flex flex-col items-center justify-center">
                 <div className={`text-4xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-500'}`}>VS</div>
               </div>
 
-              {/* Right Cake */}
               <div className="text-center">
                 <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-4">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -814,8 +806,7 @@ export default function Home() {
             className={`relative rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-modal-in ${darkMode ? 'bg-gray-800' : 'bg-white'}`}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button */}
-            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+            <div className="absolute top-4 right-4 z-10">
               <button 
                 onClick={closeCake}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${darkMode ? 'bg-gray-700 hover:bg-gray-600 text-rose-300' : 'bg-rose-100 hover:bg-rose-200 text-rose-700'}`}
@@ -826,19 +817,17 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col md:flex-row">
-              {/* Bild */}
               <div className={`w-full md:w-1/2 p-6 md:p-10 flex items-center justify-center ${darkMode ? 'bg-gradient-to-br from-gray-700 to-gray-800' : 'bg-gradient-to-br from-rose-50 to-amber-50'}`}>
                 <div className="relative w-full max-w-md aspect-square animate-cake-bounce">
                   {/* Glitzer */}
-                  {[...Array(8)].map((_, i) => (
+                  {Array.from({ length: 8 }, (_, i) => (
                     <div
                       key={i}
                       className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
                       style={{
-                        left: `${10 + Math.random() * 80}%`,
-                        top: `${10 + Math.random() * 80}%`,
+                        left: `${10 + (i * 10) % 80}%`,
+                        top: `${10 + (i * 12) % 80}%`,
                         animationDelay: `${i * 0.2}s`,
-                        boxShadow: '0 0 8px 3px rgba(251, 191, 36, 0.5)',
                       }}
                     />
                   ))}
@@ -851,7 +840,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Beschreibung */}
               <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-center">
                 <div className="flex items-center gap-3 mb-4">
                   <Heart className={`w-6 h-6 ${darkMode ? 'text-rose-500' : 'text-rose-400'} fill-current`} />
@@ -871,7 +859,7 @@ export default function Home() {
                   <p className={`font-cormorant text-lg mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
                     Teile diese Torte:
                   </p>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 flex-wrap">
                     <button
                       onClick={() => shareOnWhatsApp(selectedCake.name)}
                       className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
@@ -896,10 +884,9 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* QR Code for this cake */}
                 <div className={`${darkMode ? 'border-gray-700' : 'border-rose-100'} border-t pt-6`}>
                   <p className={`font-cormorant text-lg italic ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
-                    📱 Scanne den QR-Code für Instagram!
+                    📱 Kontaktiere mich auf Instagram für Bestellungen!
                   </p>
                 </div>
               </div>
@@ -915,9 +902,11 @@ export default function Home() {
             <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
               Welche Torte passt zu dir?
             </h2>
-            <p className={`font-cormorant text-2xl md:text-3xl ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
-              Finde deine perfekte Traum-Torte!
-            </p>
+            <div className="flex items-center justify-center gap-3 mb-5">
+              <span className="w-16 h-px bg-rose-300/60" />
+              <Sparkles className={`w-6 h-6 ${darkMode ? 'text-rose-500' : 'text-rose-400'}`} />
+              <span className="w-16 h-px bg-rose-300/60" />
+            </div>
           </div>
 
           <div className={`rounded-3xl p-6 md:p-10 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -941,16 +930,14 @@ export default function Home() {
               <div className="text-center">
                 <div className="text-4xl mb-4">🎉 Deine perfekte Torte! 🎉</div>
                 <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-6 animate-cake-bounce">
-                  {/* Glitzer around result */}
-                  {[...Array(10)].map((_, i) => (
+                  {Array.from({ length: 10 }, (_, i) => (
                     <div
                       key={i}
                       className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
                       style={{
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
+                        left: `${(i * 10) % 100}%`,
+                        top: `${(i * 13) % 100}%`,
                         animationDelay: `${i * 0.15}s`,
-                        boxShadow: '0 0 8px 2px rgba(251, 191, 36, 0.6)',
                       }}
                     />
                   ))}
@@ -1007,7 +994,7 @@ export default function Home() {
                     <button
                       key={i}
                       onClick={() => answerQuestion(answer.cake)}
-                      className={`p-4 rounded-2xl border-2 text-left transition-all duration-300 hover:scale-102 ${
+                      className={`p-4 rounded-2xl border-2 text-left transition-all duration-300 hover:scale-[1.02] ${
                         darkMode 
                           ? 'bg-gray-700 border-gray-600 hover:border-rose-400 hover:bg-gray-600 text-gray-200' 
                           : 'bg-gray-50 border-gray-200 hover:border-rose-400 hover:bg-rose-50 text-gray-700'
@@ -1149,21 +1136,9 @@ export default function Home() {
           animation: blink 0.8s infinite;
         }
         
-        @keyframes day-night {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        .animate-day-night {
-          animation: day-night 0.5s ease-in-out;
-        }
-        
         .writing-vertical {
           writing-mode: vertical-rl;
           text-orientation: mixed;
-        }
-        
-        .hover\\:scale-102:hover {
-          transform: scale(1.02);
         }
       `}</style>
     </div>
