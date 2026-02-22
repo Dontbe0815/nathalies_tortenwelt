@@ -972,13 +972,13 @@ export default function Home() {
           <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
         </button>
         
-        {/* QR Code - Unten (nur Mobile) */}
-        <div className={`lg:hidden absolute bottom-28 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center p-2 rounded-xl backdrop-blur-sm ${darkMode ? 'bg-gray-800/70' : 'bg-white/70'}`}>
+        {/* QR Code - Fixed unten links (nur Mobile) */}
+        <div className={`lg:hidden fixed bottom-36 left-4 z-50 flex flex-col items-center p-2 rounded-xl backdrop-blur-sm shadow-lg ${darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/qr.png"
             alt="Instagram QR Code"
-            className="w-16 h-16 object-contain"
+            className="w-14 h-14 object-contain"
           />
           <p className={`text-xs text-center mt-1 font-cormorant ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
             @nathalies_tortenwelt
