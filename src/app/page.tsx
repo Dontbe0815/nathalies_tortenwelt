@@ -831,9 +831,6 @@ export default function Home() {
         {isAmbientPlaying ? <Volume2 className="w-6 h-6 md:w-7 md:h-7" /> : <VolumeX className="w-6 h-6 md:w-7 md:h-7" />}
       </button>
 
-      {/* Torte mit Augen (Cake with Eyes) */}
-      <CakeWithEyes darkMode={darkMode} mousePosition={mousePosition} />
-
       {/* Parallax Floating Cakes - Optimiert für smoother Scroll */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
         {torten.slice(0, 3).map((torte, index) => (
