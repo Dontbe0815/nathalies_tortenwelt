@@ -1,26 +1,26 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Instagram, ChevronDown, Heart } from 'lucide-react'
+import { Instagram, ChevronDown, Heart, X } from 'lucide-react'
 
 const torten = [
-  { name: 'Cappuccino Nuss Torte', file: 'cappuccino-nuss-torte.png' },
-  { name: 'Erdbeer Torte', file: 'erdbeer-torte.png' },
-  { name: 'Himbeer Torte', file: 'himbeer-torte.png' },
-  { name: 'Käse Sahne Torte mit Fondantdecke', file: 'kaese-sahne-torte.png' },
-  { name: 'Marzipan Torte', file: 'marzipan-torte.png' },
-  { name: 'Schoko Bananen Torte', file: 'schoko-bananen-torte.png' },
-  { name: 'Schwarzwälder Kirsch Torte', file: 'schwarzwaelder-kirschtorte.png' },
-  { name: 'Nutella Torte', file: 'nutella.png' },
-  { name: 'Oreo Torte', file: 'oreo.png' },
-  { name: 'Wunsch Torte', file: 'wunsch.png' },
-  { name: 'Überraschungs Torte', file: 'mystery.png' },
+  { name: 'Cappuccino Nuss Torte', file: 'cappuccino-nuss-torte.png', description: 'Eine köstliche Kombination aus feinem Cappuccino und knackigen Nüssen. Ein Genuss für Kaffee-Liebhaber!' },
+  { name: 'Erdbeer Torte', file: 'erdbeer-torte.png', description: 'Fruchtige Frische mit saftigen Erdbeeren auf cremiger Basis. Perfekt für den Sommer!' },
+  { name: 'Himbeer Torte', file: 'himbeer-torte.png', description: 'Intensiver Himbeergeschmack mit einer perfekten Balance aus Süße und Säure.' },
+  { name: 'Käse Sahne Torte mit Fondantdecke', file: 'kaese-sahne-torte.png', description: 'Cremige Käsesahne unter einer wunderschönen Fondantdecke. Ein wahrer Blickfang!' },
+  { name: 'Marzipan Torte', file: 'marzipan-torte.png', description: 'Für Marzipan-Liebhaber: Feinstes Marzipan in perfekter Harmonie mit cremiger Füllung.' },
+  { name: 'Schoko Bananen Torte', file: 'schoko-bananen-torte.png', description: 'Die klassische Kombination aus Schokolade und Banane - einfach unwiderstehlich!' },
+  { name: 'Schwarzwälder Kirschtorte', file: 'schwarzwaelder-kirschtorte.png', description: 'Der deutsche Klassiker: Schokolade, Kirschen und Sahne in perfekter Harmonie.' },
+  { name: 'Nutella Torte', file: 'nutella.png', description: 'Für alle Nutella-Fans: Cremig-nussiger Schoko-Genuss pur!' },
+  { name: 'Oreo Torte', file: 'oreo.png', description: 'Knusprige Oreo-Kekse treffen auf cremige Schokolade. Ein Traum für Keks-Liebhaber!' },
+  { name: 'Wunsch Torte', file: 'wunsch.png', description: 'Deine Torte, deine Wünsche! Gemeinsam kreieren wir dein persönliches Traumstück.' },
+  { name: 'Überraschungs Torte', file: 'mystery.png', description: 'Lass dich überraschen! Eine einzigartige Kreation, die jedes Mal neu begeistert.' },
 ]
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
-  const [activeCake, setActiveCake] = useState<number | null>(null)
+  const [selectedCake, setSelectedCake] = useState<typeof torten[0] | null>(null)
   const galleryRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -39,6 +39,16 @@ export default function Home() {
 
   const scrollToGallery = () => {
     galleryRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const openCake = (cake: typeof torten[0]) => {
+    setSelectedCake(cake)
+    document.body.style.overflow = 'hidden'
+  }
+
+  const closeCake = () => {
+    setSelectedCake(null)
+    document.body.style.overflow = 'auto'
   }
 
   return (
@@ -149,7 +159,7 @@ export default function Home() {
               <span className="w-16 h-px bg-rose-300/60" />
             </div>
             <p className="font-cormorant text-2xl md:text-3xl text-rose-700/80 max-w-xl mx-auto">
-              Jede Torte wird mit frischen Zutaten und viel Liebe zum Detail handgefertigt
+              Klicke auf eine Torte, um mehr zu erfahren
             </p>
           </div>
 
@@ -158,20 +168,19 @@ export default function Home() {
             {torten.map((torte, index) => (
               <div
                 key={index}
-                className="group relative bg-white/70 backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border border-rose-100/50"
-                onMouseEnter={() => setActiveCake(index)}
-                onMouseLeave={() => setActiveCake(null)}
+                onClick={() => openCake(torte)}
+                className="group relative bg-white/70 backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border border-rose-100/50 cursor-pointer"
               >
                 {/* Glow effect on hover */}
-                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-200/0 to-amber-200/0 group-hover:from-rose-200/20 group-hover:to-amber-200/20 transition-all duration-500`} />
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-rose-200/0 to-amber-200/0 group-hover:from-rose-200/20 group-hover:to-amber-200/20 transition-all duration-500" />
                 
                 {/* Cake Image Container */}
                 <div className="relative w-full aspect-square mb-4 overflow-visible">
                   {/* Background gradient */}
-                  <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${activeCake === index ? 'bg-gradient-to-br from-rose-100/60 to-amber-50/60' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-rose-50/40 to-amber-50/40 group-hover:from-rose-100/60 group-hover:to-amber-50/60 transition-all duration-500" />
                   
                   {/* Cake Image */}
-                  <div className={`transition-transform duration-500 ${activeCake === index ? 'scale-110 -translate-y-2' : 'scale-100'}`}>
+                  <div className="transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`/images/${torte.file}`}
@@ -186,15 +195,75 @@ export default function Home() {
                   {torte.name}
                 </h3>
 
-                {/* Decorative heart on hover */}
-                <div className={`absolute top-4 right-4 transition-all duration-300 ${activeCake === index ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-                  <Heart className="w-6 h-6 text-rose-400 fill-rose-400" />
+                {/* Klick-Hinweis */}
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="text-rose-500 text-sm font-medium">Klicken für Details</span>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+      {/* Modal für Torte */}
+      {selectedCake && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={closeCake}
+        >
+          <div 
+            className="relative bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden animate-modal-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+              <button 
+                onClick={closeCake}
+                className="flex items-center gap-2 bg-rose-100 hover:bg-rose-200 text-rose-700 px-4 py-2 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6 font-bold" />
+                <span className="font-semibold">Verkleinern</span>
+              </button>
+            </div>
+
+            <div className="flex flex-col md:flex-row">
+              {/* Bild */}
+              <div className="w-full md:w-1/2 p-6 md:p-10 flex items-center justify-center bg-gradient-to-br from-rose-50 to-amber-50">
+                <div className="relative w-full max-w-md aspect-square">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/images/${selectedCake.file}`}
+                    alt={selectedCake.name}
+                    className="w-full h-full object-contain drop-shadow-2xl"
+                  />
+                </div>
+              </div>
+
+              {/* Beschreibung */}
+              <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-center">
+                <div className="flex items-center gap-3 mb-4">
+                  <Heart className="w-6 h-6 text-rose-400 fill-rose-400" />
+                  <span className="text-rose-400 font-medium">Nathalies Tortenwelt</span>
+                </div>
+                
+                <h2 className="font-great-vibes text-4xl md:text-5xl text-rose-800 mb-6">
+                  {selectedCake.name}
+                </h2>
+                
+                <p className="font-cormorant text-xl md:text-2xl text-rose-700 leading-relaxed mb-8">
+                  {selectedCake.description}
+                </p>
+
+                <div className="border-t border-rose-100 pt-6">
+                  <p className="font-cormorant text-lg text-rose-600 italic">
+                    Interessiert? Kontaktiere mich auf Instagram für eine Beratung und Bestellung!
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Instagram Section */}
       <section className="py-20 md:py-28 px-4 md:px-6 bg-gradient-to-b from-transparent via-rose-100/40 to-rose-100/60">
@@ -269,6 +338,20 @@ export default function Home() {
         }
         .animate-float {
           animation: float 4s ease-in-out infinite;
+        }
+        
+        @keyframes modal-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        .animate-modal-in {
+          animation: modal-in 0.3s ease-out forwards;
         }
       `}</style>
     </div>
