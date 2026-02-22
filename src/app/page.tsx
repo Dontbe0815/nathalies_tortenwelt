@@ -380,9 +380,7 @@ export default function Home() {
   
   // Hintergrundmusik
   const [isAmbientPlaying, setIsAmbientPlaying] = useState(false)
-  const ambientOscillatorsRef = useRef<OscillatorNode[]>([])
-  const ambientGainRef = useRef<GainNode | null>(null)
-  const isMusicPlayingRef = useRef(false) // Ref für sofortige Checks
+  const audioRef = useRef<HTMLAudioElement | null>(null)
   
   // Holiday Countdown
   const [holidayInfo, setHolidayInfo] = useState<HolidayInfo | null>(null)
@@ -497,136 +495,34 @@ export default function Home() {
     }
   }, [])
 
-  // Sanfte Hintergrundmusik Funktionen
-  const startBackgroundMusic = useCallback(async () => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
-      }
-      const ctx = audioContextRef.current
-      
-      // WICHTIG: AudioContext resume für Browser
-      if (ctx.state === 'suspended') {
-        await ctx.resume()
-      }
-      
-      // Master gain - hörbare Lautstärke
-      const masterGain = ctx.createGain()
-      masterGain.gain.setValueAtTime(0.12, ctx.currentTime)
-      masterGain.connect(ctx.destination)
-      ambientGainRef.current = masterGain
-      
-      // Sanfte Melodie - C-Dur Töne
-      const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 493.88, 440.00, 392.00, 349.23]
-      let noteIndex = 0
-      
-      const oscillators: OscillatorNode[] = []
-      
-      // Hintergrund-Akkord (Pad) - C-Dur
-      const padNotes = [261.63, 329.63, 392.00]
-      padNotes.forEach((freq, i) => {
-        const padOsc = ctx.createOscillator()
-        const padGain = ctx.createGain()
-        
-        padOsc.type = 'sine'
-        padOsc.frequency.setValueAtTime(freq, ctx.currentTime)
-        padGain.gain.setValueAtTime(0.06, ctx.currentTime)
-        
-        // Sanftes Vibrato
-        const lfo = ctx.createOscillator()
-        lfo.type = 'sine'
-        lfo.frequency.setValueAtTime(4 + i * 0.5, ctx.currentTime)
-        const lfoGain = ctx.createGain()
-        lfoGain.gain.setValueAtTime(3, ctx.currentTime)
-        lfo.connect(lfoGain)
-        lfoGain.connect(padOsc.frequency)
-        
-        padOsc.connect(padGain)
-        padGain.connect(masterGain)
-        
-        padOsc.start()
-        lfo.start()
-        oscillators.push(padOsc, lfo)
-      })
-      
-      ambientOscillatorsRef.current = oscillators
-      isMusicPlayingRef.current = true
-      setIsAmbientPlaying(true)
-      
-      // Melodie spielen
-      const playNote = () => {
-        if (!isMusicPlayingRef.current) return
-        
-        try {
-          const osc = ctx.createOscillator()
-          const gain = ctx.createGain()
-          
-          osc.type = 'sine'
-          const note = notes[noteIndex % notes.length]
-          osc.frequency.setValueAtTime(note, ctx.currentTime)
-          
-          // Sanfter Anschlag und Release
-          gain.gain.setValueAtTime(0, ctx.currentTime)
-          gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.08)
-          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2)
-          
-          osc.connect(gain)
-          gain.connect(masterGain)
-          
-          osc.start(ctx.currentTime)
-          osc.stop(ctx.currentTime + 1.2)
-          
-          noteIndex++
-        } catch {
-          // Ignore errors
-        }
-        
-        // Nächste Note
-        if (isMusicPlayingRef.current) {
-          const nextNoteTime = 350 + Math.random() * 350
-          ;(window as unknown as { musicTimeout?: NodeJS.Timeout }).musicTimeout = setTimeout(playNote, nextNoteTime)
-        }
-      }
-      
-      // Melodie starten nach kurzer Verzögerung
-      setTimeout(playNote, 100)
-      
-    } catch (error) {
-      console.log('Audio not supported:', error)
-    }
-  }, [])
-
-  const stopBackgroundMusic = useCallback(() => {
-    isMusicPlayingRef.current = false
-    
-    try {
-      ambientOscillatorsRef.current.forEach(osc => {
-        try {
-          osc.stop()
-        } catch {
-          // Oscillator may already be stopped
-        }
-      })
-      ambientOscillatorsRef.current = []
-      
-      const musicTimeout = (window as unknown as { musicTimeout?: NodeJS.Timeout }).musicTimeout
-      if (musicTimeout) {
-        clearTimeout(musicTimeout)
-      }
-      
-      setIsAmbientPlaying(false)
-    } catch {
-      console.log('Error stopping music')
-    }
-  }, [])
-
+  // Hintergrundmusik mit MP3
   const toggleBackgroundMusic = () => {
+    if (!audioRef.current) {
+      audioRef.current = new Audio('/music/background.mp3')
+      audioRef.current.loop = true
+      audioRef.current.volume = 0.5
+    }
+    
     if (isAmbientPlaying) {
-      stopBackgroundMusic()
+      audioRef.current.pause()
+      setIsAmbientPlaying(false)
     } else {
-      startBackgroundMusic()
+      audioRef.current.play().catch(() => {
+        console.log('Audio playback failed')
+      })
+      setIsAmbientPlaying(true)
     }
   }
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current = null
+      }
+    }
+  }, [])
 
   const scrollToGallery = () => {
     galleryRef.current?.scrollIntoView({ behavior: 'smooth' })
