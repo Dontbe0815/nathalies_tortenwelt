@@ -382,6 +382,7 @@ export default function Home() {
   const [isAmbientPlaying, setIsAmbientPlaying] = useState(false)
   const ambientOscillatorsRef = useRef<OscillatorNode[]>([])
   const ambientGainRef = useRef<GainNode | null>(null)
+  const isMusicPlayingRef = useRef(false) // Ref für sofortige Checks
   
   // Holiday Countdown
   const [holidayInfo, setHolidayInfo] = useState<HolidayInfo | null>(null)
@@ -497,41 +498,46 @@ export default function Home() {
   }, [])
 
   // Sanfte Hintergrundmusik Funktionen
-  const startBackgroundMusic = useCallback(() => {
+  const startBackgroundMusic = useCallback(async () => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       }
       const ctx = audioContextRef.current
       
-      // Master gain - sehr leise und sanft
+      // WICHTIG: AudioContext resume für Browser
+      if (ctx.state === 'suspended') {
+        await ctx.resume()
+      }
+      
+      // Master gain - hörbare Lautstärke
       const masterGain = ctx.createGain()
-      masterGain.gain.setValueAtTime(0.06, ctx.currentTime)
+      masterGain.gain.setValueAtTime(0.12, ctx.currentTime)
       masterGain.connect(ctx.destination)
       ambientGainRef.current = masterGain
       
-      // Sanfte Melodie - Noten einer entspannten C-Dur Melodie
-      const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 392.00, 349.23] // C-Dur Töne
+      // Sanfte Melodie - C-Dur Töne
+      const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 493.88, 440.00, 392.00, 349.23]
       let noteIndex = 0
       
       const oscillators: OscillatorNode[] = []
       
       // Hintergrund-Akkord (Pad) - C-Dur
-      const padNotes = [261.63, 329.63, 392.00] // C-Dur Akkord
+      const padNotes = [261.63, 329.63, 392.00]
       padNotes.forEach((freq, i) => {
         const padOsc = ctx.createOscillator()
         const padGain = ctx.createGain()
         
         padOsc.type = 'sine'
         padOsc.frequency.setValueAtTime(freq, ctx.currentTime)
-        padGain.gain.setValueAtTime(0.02, ctx.currentTime)
+        padGain.gain.setValueAtTime(0.06, ctx.currentTime)
         
         // Sanftes Vibrato
         const lfo = ctx.createOscillator()
         lfo.type = 'sine'
-        lfo.frequency.setValueAtTime(3 + i * 0.3, ctx.currentTime)
+        lfo.frequency.setValueAtTime(4 + i * 0.5, ctx.currentTime)
         const lfoGain = ctx.createGain()
-        lfoGain.gain.setValueAtTime(1.5, ctx.currentTime)
+        lfoGain.gain.setValueAtTime(3, ctx.currentTime)
         lfo.connect(lfoGain)
         lfoGain.connect(padOsc.frequency)
         
@@ -543,47 +549,56 @@ export default function Home() {
         oscillators.push(padOsc, lfo)
       })
       
+      ambientOscillatorsRef.current = oscillators
+      isMusicPlayingRef.current = true
+      setIsAmbientPlaying(true)
+      
       // Melodie spielen
       const playNote = () => {
-        if (!isAmbientPlaying && oscillators.length > 0) return
+        if (!isMusicPlayingRef.current) return
         
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
+        try {
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          
+          osc.type = 'sine'
+          const note = notes[noteIndex % notes.length]
+          osc.frequency.setValueAtTime(note, ctx.currentTime)
+          
+          // Sanfter Anschlag und Release
+          gain.gain.setValueAtTime(0, ctx.currentTime)
+          gain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 0.08)
+          gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2)
+          
+          osc.connect(gain)
+          gain.connect(masterGain)
+          
+          osc.start(ctx.currentTime)
+          osc.stop(ctx.currentTime + 1.2)
+          
+          noteIndex++
+        } catch {
+          // Ignore errors
+        }
         
-        osc.type = 'sine'
-        const note = notes[noteIndex % notes.length]
-        osc.frequency.setValueAtTime(note, ctx.currentTime)
-        
-        // Sanfter Anschlag und Release
-        gain.gain.setValueAtTime(0, ctx.currentTime)
-        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.15)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2)
-        
-        osc.connect(gain)
-        gain.connect(masterGain)
-        
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 2)
-        
-        noteIndex++
-        
-        // Nächste Note nach sanftem Timing
-        const nextNoteTime = 1500 + Math.random() * 1000
-        ;(window as unknown as { musicTimeout?: NodeJS.Timeout }).musicTimeout = setTimeout(playNote, nextNoteTime)
+        // Nächste Note
+        if (isMusicPlayingRef.current) {
+          const nextNoteTime = 350 + Math.random() * 350
+          ;(window as unknown as { musicTimeout?: NodeJS.Timeout }).musicTimeout = setTimeout(playNote, nextNoteTime)
+        }
       }
       
-      ambientOscillatorsRef.current = oscillators
+      // Melodie starten nach kurzer Verzögerung
+      setTimeout(playNote, 100)
       
-      // Melodie starten
-      playNote()
-      
-      setIsAmbientPlaying(true)
-    } catch {
-      console.log('Audio not supported')
+    } catch (error) {
+      console.log('Audio not supported:', error)
     }
-  }, [isAmbientPlaying])
+  }, [])
 
   const stopBackgroundMusic = useCallback(() => {
+    isMusicPlayingRef.current = false
+    
     try {
       ambientOscillatorsRef.current.forEach(osc => {
         try {
