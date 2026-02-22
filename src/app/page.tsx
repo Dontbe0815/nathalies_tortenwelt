@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Cake, Sparkles } from 'lucide-react'
+import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Cake, Sparkles, Share2, MessageCircle, Facebook } from 'lucide-react'
 
 const torten = [
   { name: 'Cappuccino Nuss Torte', file: 'cappuccino-nuss-torte.png', description: 'Eine köstliche Kombination aus feinem Cappuccino und knackigen Nüssen. Ein Genuss für Kaffee-Liebhaber!' },
@@ -61,7 +61,7 @@ const quizQuestions = [
       { text: "Schokoladig & Süß", cake: "Nutella Torte" },
       { text: "Fruchtig & Frisch", cake: "Himbeer Torte" },
       { text: "Nussig & Cremig", cake: "Marzipan Torte" },
-      { text: "Klassisch & Eleganta", cake: "Schwarzwälder Kirschtorte" },
+      { text: "Klassisch & Elegant", cake: "Schwarzwälder Kirschtorte" },
     ]
   },
 ]
@@ -74,11 +74,8 @@ const getSeason = (): Season => {
   const month = now.getMonth()
   const day = now.getDate()
   
-  // Valentine (Feb 1-14)
   if (month === 1 && day <= 14) return 'valentine'
-  // Easter (March/April - approximated)
   if (month === 2 || month === 3) return 'easter'
-  // Christmas (December)
   if (month === 11) return 'christmas'
   
   return 'default'
@@ -87,57 +84,100 @@ const getSeason = (): Season => {
 const seasonConfig = {
   default: {
     name: 'Klassisch',
-    colors: {
-      primary: 'rose',
-      secondary: 'amber',
-      accent: 'pink',
-    },
     decorations: [] as string[],
     greeting: 'Willkommen!',
   },
   valentine: {
     name: 'Valentinstag',
-    colors: {
-      primary: 'rose',
-      secondary: 'pink',
-      accent: 'red',
-    },
     decorations: ['💕', '❤️', '💘', '🌹', '💗'],
     greeting: 'Alles Liebe! 💕',
   },
   easter: {
     name: 'Ostern',
-    colors: {
-      primary: 'yellow',
-      secondary: 'green',
-      accent: 'pink',
-    },
     decorations: ['🐰', '🥚', '🌸', '🐥', '🌷'],
     greeting: 'Frohe Ostern! 🐰',
   },
   christmas: {
     name: 'Weihnachten',
-    colors: {
-      primary: 'red',
-      secondary: 'green',
-      accent: 'gold',
-    },
     decorations: ['🎄', '⭐', '🎅', '🎁', '❄️'],
     greeting: 'Frohe Weihnachten! 🎄',
   },
+}
+
+// Konfetti Component
+const Confetti = ({ active }: { active: boolean }) => {
+  if (!active) return null
+  
+  const colors = ['#f472b6', '#fb923c', '#fbbf24', '#a3e635', '#38bdf8', '#c084fc']
+  const confettiPieces = Array.from({ length: 100 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 2,
+    duration: 2 + Math.random() * 3,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    size: 5 + Math.random() * 10,
+  }))
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-[200] overflow-hidden">
+      {confettiPieces.map((piece) => (
+        <div
+          key={piece.id}
+          className="absolute animate-confetti"
+          style={{
+            left: `${piece.left}%`,
+            top: '-20px',
+            width: piece.size,
+            height: piece.size * 0.6,
+            backgroundColor: piece.color,
+            borderRadius: Math.random() > 0.5 ? '50%' : '0',
+            animationDelay: `${piece.delay}s`,
+            animationDuration: `${piece.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Sparkle Component
+const Sparkle = ({ className }: { className?: string }) => (
+  <div className={`absolute pointer-events-none ${className}`}>
+    <div className="sparkle" />
+  </div>
+)
+
+// Typewriter Component
+const Typewriter = ({ text, delay = 50, className }: { text: string; delay?: number; className?: string }) => {
+  const [displayText, setDisplayText] = useState('')
+  const [currentIndex, setCurrentIndex] = useState(0)
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timeout = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex])
+        setCurrentIndex(prev => prev + 1)
+      }, delay)
+      return () => clearTimeout(timeout)
+    }
+  }, [currentIndex, text, delay])
+
+  return <span className={className}>{displayText}<span className="animate-blink">|</span></span>
 }
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [loadingProgress, setLoadingProgress] = useState(0)
   const [selectedCake, setSelectedCake] = useState<typeof torten[0] | null>(null)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const [darkMode, setDarkMode] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
   const galleryRef = useRef<HTMLDivElement>(null)
   
-  // Mouse Trail
-  const [mouseTrail, setMouseTrail] = useState<{ x: number; y: number; id: number }[]>([])
+  // Confetti State
+  const [showConfetti, setShowConfetti] = useState(false)
   
   // Quiz State
   const [quizStarted, setQuizStarted] = useState(false)
@@ -148,21 +188,36 @@ export default function Home() {
   // Seasonal Theme
   const [season, setSeason] = useState<Season>('default')
   
-  // Audio Context für Sound-Effekte
+  // Easter Egg
+  const [logoClicks, setLogoClicks] = useState(0)
+  const [showEasterEgg, setShowEasterEgg] = useState(false)
+  
+  // Torten Slider
+  const [sliderCake1, setSliderCake1] = useState(0)
+  const [sliderCake2, setSliderCake2] = useState(1)
+  
+  // Audio Context
   const audioContextRef = useRef<AudioContext | null>(null)
 
   useEffect(() => {
-    // Set season
     setSeason(getSeason())
     
-    // Loading Animation
+    // Loading Animation with stacking cakes
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval)
+          return 100
+        }
+        return prev + 2
+      })
+    }, 30)
+
     const loadTimer = setTimeout(() => {
       setIsLoading(false)
-    }, 1500)
+      setIsVisible(true)
+    }, 1800)
 
-    // Initial visibility
-    const timer = setTimeout(() => setIsVisible(true), 100)
-    
     const handleScroll = () => {
       setScrollY(window.scrollY)
       setShowBackToTop(window.scrollY > 500)
@@ -170,7 +225,6 @@ export default function Home() {
     
     window.addEventListener('scroll', handleScroll, { passive: true })
 
-    // Check for dark mode preference
     if (typeof window !== 'undefined') {
       const savedMode = localStorage.getItem('darkMode')
       if (savedMode) {
@@ -180,32 +234,9 @@ export default function Home() {
     
     return () => {
       window.removeEventListener('scroll', handleScroll)
-      clearTimeout(timer)
       clearTimeout(loadTimer)
+      clearInterval(progressInterval)
     }
-  }, [])
-
-  // Mouse Trail Effect
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      const newHeart = {
-        x: e.clientX,
-        y: e.clientY,
-        id: Date.now()
-      }
-      setMouseTrail(prev => [...prev.slice(-15), newHeart])
-    }
-
-    window.addEventListener('mousemove', handleMouseMove)
-    return () => window.removeEventListener('mousemove', handleMouseMove)
-  }, [])
-
-  // Remove old hearts
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMouseTrail(prev => prev.slice(-10))
-    }, 100)
-    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -219,15 +250,12 @@ export default function Home() {
     }
   }, [darkMode])
 
-  // Sound Effect - "Mjam"
   const playMjamSound = useCallback(() => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       }
       const ctx = audioContextRef.current
-      
-      // Create a fun "Mjam" sound
       const oscillator = ctx.createOscillator()
       const gainNode = ctx.createGain()
       
@@ -244,7 +272,6 @@ export default function Home() {
       oscillator.start(ctx.currentTime)
       oscillator.stop(ctx.currentTime + 0.3)
     } catch (e) {
-      // Audio not supported
       console.log('Audio not supported')
     }
   }, [])
@@ -257,15 +284,43 @@ export default function Home() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  const triggerConfetti = () => {
+    setShowConfetti(true)
+    setTimeout(() => setShowConfetti(false), 5000)
+  }
+
   const openCake = (cake: typeof torten[0]) => {
     setSelectedCake(cake)
     document.body.style.overflow = 'hidden'
     playMjamSound()
+    triggerConfetti()
   }
 
   const closeCake = () => {
     setSelectedCake(null)
     document.body.style.overflow = 'auto'
+  }
+
+  const toggleDarkMode = () => {
+    setIsTransitioning(true)
+    setTimeout(() => {
+      setDarkMode(!darkMode)
+      setIsTransitioning(false)
+    }, 500)
+  }
+
+  // Logo Click Easter Egg
+  const handleLogoClick = () => {
+    const newCount = logoClicks + 1
+    setLogoClicks(newCount)
+    
+    if (newCount >= 10) {
+      setShowEasterEgg(true)
+      triggerConfetti()
+      playMjamSound()
+      setTimeout(() => setShowEasterEgg(false), 5000)
+      setLogoClicks(0)
+    }
   }
 
   // Quiz Logic
@@ -283,7 +338,6 @@ export default function Home() {
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion(currentQuestion + 1)
     } else {
-      // Calculate result - most frequent cake
       const counts = newAnswers.reduce((acc, cake) => {
         acc[cake] = (acc[cake] || 0) + 1
         return acc
@@ -293,6 +347,7 @@ export default function Home() {
       const foundCake = torten.find(t => t.name === result)
       setQuizResult(foundCake || torten[0])
       playMjamSound()
+      triggerConfetti()
     }
   }
 
@@ -303,73 +358,124 @@ export default function Home() {
     setQuizResult(null)
   }
 
+  // Share Functions
+  const shareOnWhatsApp = (cakeName: string) => {
+    const text = `Ich habe mir gerade die ${cakeName} bei Nathalies Tortenwelt angesehen! 🎂`
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+  }
+
+  const shareOnFacebook = (cakeName: string) => {
+    const url = 'https://nathalies-tortenwelt.vercel.app'
+    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(cakeName)}`, '_blank')
+  }
+
+  const shareOnPinterest = (cakeName: string) => {
+    const url = 'https://nathalies-tortenwelt.vercel.app'
+    window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&description=${encodeURIComponent(cakeName + ' - Nathalies Tortenwelt')}`, '_blank')
+  }
+
   const currentSeason = seasonConfig[season]
 
-  // Loading Screen
+  // Loading Screen with Stacking Cakes
   if (isLoading) {
+    const loadingCakes = torten.slice(0, 5)
+    
     return (
-      <div className={`fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-${currentSeason.colors.primary}-100 to-${currentSeason.colors.secondary}-50`}>
-        <div className="text-center animate-fade-in">
-          <div className="relative w-32 h-32 md:w-40 md:h-40 mx-auto mb-6 animate-bounce-slow">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/logo.png"
-              alt="Loading"
-              className="w-full h-full object-contain drop-shadow-2xl"
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-b from-rose-100 to-amber-50 overflow-hidden">
+        {/* Stacking Cakes Animation */}
+        <div className="absolute inset-0 flex items-end justify-center pb-20">
+          {loadingCakes.map((cake, index) => (
+            <div
+              key={index}
+              className="absolute transition-all duration-500 ease-out"
+              style={{
+                bottom: loadingProgress > index * 20 ? `${index * 60}px` : '-200px',
+                opacity: loadingProgress > index * 20 ? 1 : 0,
+                transform: `translateX(${(index - 2) * 80}px) scale(0.4)`,
+                zIndex: 10 - index,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/images/${cake.file}`}
+                alt=""
+                className="w-40 h-40 object-contain drop-shadow-xl"
+              />
+            </div>
+          ))}
+        </div>
+        
+        {/* Progress Bar */}
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64">
+          <div className="h-2 bg-rose-200 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 rounded-full transition-all duration-100"
+              style={{ width: `${loadingProgress}%` }}
             />
           </div>
-          <h1 className={`font-great-vibes text-3xl md:text-4xl text-${currentSeason.colors.primary}-800 mb-2`}>
-            Nathalies Tortenwelt
-          </h1>
-          <p className="font-cormorant text-xl mb-4 text-rose-600">{currentSeason.greeting}</p>
-          <div className="flex justify-center gap-2">
-            <span className={`w-3 h-3 bg-${currentSeason.colors.primary}-400 rounded-full animate-bounce`} style={{ animationDelay: '0ms' }}></span>
-            <span className={`w-3 h-3 bg-${currentSeason.colors.primary}-400 rounded-full animate-bounce`} style={{ animationDelay: '150ms' }}></span>
-            <span className={`w-3 h-3 bg-${currentSeason.colors.primary}-400 rounded-full animate-bounce`} style={{ animationDelay: '300ms' }}></span>
-          </div>
+          <p className="text-center mt-3 font-cormorant text-rose-700 text-lg">
+            {loadingProgress < 100 ? 'Torten werden gestapelt...' : 'Fertig! 🎂'}
+          </p>
         </div>
-        <style jsx global>{`
-          @keyframes fade-in {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-          }
-          .animate-fade-in {
-            animation: fade-in 0.5s ease-out forwards;
-          }
-          .animate-bounce-slow {
-            animation: bounce 2s infinite;
-          }
-        `}</style>
+
+        {/* Glitzer Effects */}
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 bg-amber-400 rounded-full animate-sparkle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+            }}
+          />
+        ))}
       </div>
     )
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-500 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-b from-rose-50 via-amber-50/20 to-rose-50/30'} overflow-x-hidden`}>
+    <div className={`min-h-screen transition-all duration-700 ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-b from-rose-50 via-amber-50/20 to-rose-50/30'} overflow-x-hidden`}>
       
-      {/* Mouse Trail Hearts */}
-      {mouseTrail.map((heart, index) => (
-        <div
-          key={heart.id}
-          className="fixed pointer-events-none z-[100] animate-heart-fade"
-          style={{
-            left: heart.x - 10,
-            top: heart.y - 10,
-            opacity: 1 - (index * 0.05),
-            transform: `scale(${1 - index * 0.05})`,
-          }}
-        >
-          <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />
+      {/* Confetti */}
+      <Confetti active={showConfetti} />
+      
+      {/* Easter Egg Modal */}
+      {showEasterEgg && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 text-center animate-modal-in max-w-md mx-4">
+            <div className="text-6xl mb-4">🎉🎂🎉</div>
+            <h2 className="font-great-vibes text-4xl text-rose-800 mb-4">
+              Geheimnis entdeckt!
+            </h2>
+            <p className="font-cormorant text-xl text-rose-700 mb-6">
+              Du hast das Easter Egg gefunden! Als Belohnung: Ein virtuelles Stück Torte! 🍰
+            </p>
+            <button
+              onClick={() => setShowEasterEgg(false)}
+              className="bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 text-white px-8 py-3 rounded-full font-semibold"
+            >
+              Danke! 💕
+            </button>
+          </div>
         </div>
-      ))}
-      
+      )}
+
+      {/* Scroll Progress Bar */}
+      <div className="fixed top-0 left-0 right-0 h-1 z-[100] bg-gray-200/30">
+        <div 
+          className="h-full bg-gradient-to-r from-pink-500 via-rose-500 to-orange-400 transition-all duration-100"
+          style={{ width: `${Math.min((scrollY / (document.body.scrollHeight - window.innerHeight)) * 100, 100)}%` }}
+        />
+      </div>
+
       {/* Seasonal Decorations */}
       {currentSeason.decorations.length > 0 && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
           {currentSeason.decorations.map((emoji, i) => (
             <div
               key={i}
-              className="absolute text-4xl animate-float-slow opacity-30"
+              className="absolute text-4xl animate-float-slow opacity-20"
               style={{
                 left: `${10 + i * 20}%`,
                 top: `${20 + (i % 3) * 25}%`,
@@ -384,9 +490,9 @@ export default function Home() {
       )}
 
       {/* Loading Overlay Fade Out */}
-      <div className={`fixed inset-0 z-[90] pointer-events-none bg-gradient-to-b from-rose-100 to-amber-50 transition-opacity duration-500 ${isLoading ? 'opacity-100' : 'opacity-0'}`} />
+      <div className={`fixed inset-0 z-[90] pointer-events-none bg-gradient-to-b from-rose-100 to-amber-50 transition-opacity duration-700 ${isLoading ? 'opacity-100' : 'opacity-0'}`} />
       
-      {/* Fixed Instagram Button - rechts am Rand */}
+      {/* Fixed Instagram Button */}
       <a
         href="https://instagram.com/nathalies_tortenwelt"
         target="_blank"
@@ -398,13 +504,15 @@ export default function Home() {
         <span className="hidden md:block text-xs font-medium writing-vertical">Instagram</span>
       </a>
 
-      {/* Dark Mode Toggle */}
+      {/* Dark Mode Toggle with Animation */}
       <button
-        onClick={() => setDarkMode(!darkMode)}
-        className={`fixed left-4 md:left-6 top-1/2 -translate-y-1/2 z-50 p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 ${darkMode ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-yellow-400'}`}
+        onClick={toggleDarkMode}
+        className={`fixed left-4 md:left-6 top-1/2 -translate-y-1/2 z-50 p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-500 ${isTransitioning ? 'animate-day-night' : ''} ${darkMode ? 'bg-yellow-400 text-gray-900' : 'bg-gray-800 text-yellow-400'}`}
         aria-label="Dark Mode Toggle"
       >
-        {darkMode ? <Sun className="w-6 h-6 md:w-7 md:h-7" /> : <Moon className="w-6 h-6 md:w-7 md:h-7" />}
+        <div className={`transition-transform duration-500 ${isTransitioning ? 'animate-spin' : ''}`}>
+          {darkMode ? <Sun className="w-6 h-6 md:w-7 md:h-7" /> : <Moon className="w-6 h-6 md:w-7 md:h-7" />}
+        </div>
       </button>
 
       {/* Back to Top Button */}
@@ -428,12 +536,17 @@ export default function Home() {
               transform: `translateY(${scrollY * (0.1 + index * 0.05)}px) rotate(${scrollY * 0.02}deg)`,
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/images/${torte.file}`}
-              alt=""
-              className="w-24 h-24 md:w-32 md:h-32 object-contain"
-            />
+            {/* Glitzer around parallax cakes */}
+            <div className="relative">
+              <Sparkle className="absolute -top-2 -left-2 animate-sparkle" />
+              <Sparkle className="absolute -top-2 -right-2 animate-sparkle" style={{ animationDelay: '0.5s' } as React.CSSProperties} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/images/${torte.file}`}
+                alt=""
+                className="w-24 h-24 md:w-32 md:h-32 object-contain"
+              />
+            </div>
           </div>
         ))}
       </div>
@@ -441,7 +554,7 @@ export default function Home() {
       {/* Fullscreen Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         
-        {/* Vollbild Hintergrund-Logo */}
+        {/* Background Logo */}
         <div 
           className="absolute inset-0 z-0"
           style={{ transform: `scale(1.05) translateY(${scrollY * 0.2}px)` }}
@@ -455,7 +568,7 @@ export default function Home() {
         </div>
 
         {/* Gradient Overlay */}
-        <div className={`absolute inset-0 z-10 transition-colors duration-500 ${darkMode ? 'bg-gradient-to-b from-gray-900/80 via-transparent to-gray-900/80' : 'bg-gradient-to-b from-rose-50/60 via-transparent to-rose-50/80'}`} />
+        <div className={`absolute inset-0 z-10 transition-colors duration-700 ${darkMode ? 'bg-gradient-to-b from-gray-900/80 via-transparent to-gray-900/80' : 'bg-gradient-to-b from-rose-50/60 via-transparent to-rose-50/80'}`} />
 
         {/* Floating decorative elements */}
         <div className="absolute inset-0 pointer-events-none z-20">
@@ -467,48 +580,60 @@ export default function Home() {
             className={`absolute top-[25%] right-[15%] w-28 h-28 md:w-40 md:h-40 rounded-full blur-3xl animate-pulse ${darkMode ? 'bg-amber-900/25' : 'bg-amber-300/25'}`}
             style={{ transform: `translateY(${Math.cos(scrollY * 0.01) * 25}px)`, animationDelay: '1s' }}
           />
-          <div 
-            className={`absolute bottom-[30%] left-[20%] w-20 h-20 md:w-28 md:h-28 rounded-full blur-3xl animate-pulse ${darkMode ? 'bg-purple-900/25' : 'bg-pink-300/25'}`}
-            style={{ transform: `translateY(${Math.sin(scrollY * 0.015) * 15}px)`, animationDelay: '0.5s' }}
-          />
-          <div 
-            className={`absolute bottom-[20%] right-[10%] w-24 h-24 md:w-36 md:h-36 rounded-full blur-3xl animate-pulse ${darkMode ? 'bg-rose-800/30' : 'bg-rose-200/30'}`}
-            style={{ transform: `translateY(${Math.cos(scrollY * 0.012) * 20}px)`, animationDelay: '1.5s' }}
-          />
         </div>
 
-        {/* Main Content - Logo NEBEN Text */}
+        {/* Main Content */}
         <div 
           className={`relative z-30 px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
           style={{ transform: `translateY(${scrollY * 0.15}px)` }}
         >
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
             
-            {/* Schwebendes Logo - GROß */}
-            <div className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] flex-shrink-0 animate-float">
+            {/* Logo with Glitzer - Clickable for Easter Egg */}
+            <div 
+              className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] flex-shrink-0 animate-float cursor-pointer group"
+              onClick={handleLogoClick}
+            >
+              {/* Glitzer effects around logo */}
+              <div className="absolute inset-0 pointer-events-none">
+                {[...Array(12)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
+                    style={{
+                      left: `${20 + Math.random() * 60}%`,
+                      top: `${20 + Math.random() * 60}%`,
+                      animationDelay: `${i * 0.3}s`,
+                      boxShadow: '0 0 6px 2px rgba(251, 191, 36, 0.6)',
+                    }}
+                  />
+                ))}
+              </div>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/logo.png"
                 alt="Nathalies Tortenwelt Logo"
-                className="w-full h-full object-contain drop-shadow-2xl"
+                className="w-full h-full object-contain drop-shadow-2xl group-hover:scale-105 transition-transform duration-300"
               />
+              {logoClicks > 0 && logoClicks < 10 && (
+                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-xs text-rose-500">
+                  {10 - logoClicks} mehr...
+                </div>
+              )}
             </div>
 
-            {/* Text */}
+            {/* Text with Typewriter */}
             <div className="text-center md:text-left">
-              {/* Name mit eleganter Schrift - GRÖSSER */}
               <h1 className={`font-great-vibes text-6xl md:text-7xl lg:text-8xl mb-3 tracking-wide transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
-                Nathalies Tortenwelt
+                {isVisible && <Typewriter text="Nathalies Tortenwelt" delay={80} />}
               </h1>
               
-              {/* Decorative line */}
               <div className="flex items-center justify-center md:justify-start gap-3 my-5">
                 <span className="w-20 md:w-28 h-px bg-gradient-to-r from-transparent to-amber-400/60" />
                 <Heart className={`w-6 h-6 transition-colors duration-500 ${darkMode ? 'text-rose-400' : 'text-rose-400'} fill-rose-400`} />
                 <span className="w-20 md:w-28 h-px bg-gradient-to-l from-transparent to-amber-400/60" />
               </div>
 
-              {/* Tagline mit eleganter Schrift - GRÖSSER */}
               <p className={`font-cormorant text-3xl md:text-4xl lg:text-5xl font-semibold italic mb-3 transition-colors duration-500 ${darkMode ? 'text-rose-200/90' : 'text-rose-700/90'}`}>
                 Handgemachte Torten mit Liebe
               </p>
@@ -516,7 +641,6 @@ export default function Home() {
                 Jede Torte ein Unikat, gebacken mit Herz und Seele
               </p>
               
-              {/* Seasonal Greeting */}
               {season !== 'default' && (
                 <p className={`mt-4 font-cormorant text-xl italic ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
                   ✨ {currentSeason.greeting}
@@ -536,10 +660,16 @@ export default function Home() {
         </button>
       </section>
 
-      {/* Gallery Section */}
-      <section ref={galleryRef} className="py-20 md:py-28 px-4 md:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Section Title - GRÖSSER */}
+      {/* Gallery Section with Morphing Transition */}
+      <section 
+        ref={galleryRef} 
+        className={`py-20 md:py-28 px-4 md:px-6 lg:px-8 transition-all duration-700 ${darkMode ? 'bg-gray-800/50' : 'bg-gradient-to-b from-rose-100/40 to-amber-100/40'}`}
+        style={{ 
+          clipPath: 'polygon(0 5%, 100% 0, 100% 95%, 0 100%)',
+        }}
+      >
+        <div className="max-w-7xl mx-auto pt-10">
+          {/* Section Title */}
           <div className="text-center mb-16 md:mb-20">
             <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-4 transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
               Meine Kreationen
@@ -561,48 +691,115 @@ export default function Home() {
                 key={index}
                 onClick={() => openCake(torte)}
                 className={`group relative backdrop-blur-sm rounded-3xl p-5 md:p-7 shadow-lg hover:shadow-2xl transition-all duration-500 ease-out hover:-translate-y-2 md:hover:-translate-y-4 border cursor-pointer ${darkMode ? 'bg-gray-800/70 border-gray-700/50 hover:border-rose-500/30' : 'bg-white/70 border-rose-100/50 hover:border-rose-300/50'}`}
-                style={{ perspective: '1000px' }}
               >
-                {/* Glow effect on hover */}
-                <div className={`absolute inset-0 rounded-3xl transition-all duration-500 ${darkMode ? 'group-hover:from-rose-900/20 group-hover:to-amber-900/20' : 'group-hover:from-rose-200/20 group-hover:to-amber-200/20'} bg-gradient-to-br from-transparent to-transparent`} />
+                {/* Glitzer on hover */}
+                <div className="absolute inset-0 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-1 h-1 bg-amber-400 rounded-full animate-sparkle"
+                      style={{
+                        left: `${10 + i * 15}%`,
+                        top: `${10 + (i % 3) * 40}%`,
+                        animationDelay: `${i * 0.2}s`,
+                      }}
+                    />
+                  ))}
+                </div>
                 
-                {/* Cake Image Container with 3D Effect */}
-                <div 
-                  className="relative w-full aspect-square mb-4 overflow-visible transition-transform duration-500 group-hover:rotate-y-12 group-hover:rotate-x-3"
-                  style={{ 
-                    transformStyle: 'preserve-3d',
-                    transform: 'rotateX(0deg) rotateY(0deg)',
-                  }}
-                >
-                  {/* Background gradient */}
+                {/* Cake Image */}
+                <div className="relative w-full aspect-square mb-4 overflow-visible">
                   <div className={`absolute inset-0 rounded-2xl transition-all duration-500 ${darkMode ? 'bg-gradient-to-br from-gray-700/40 to-gray-600/40' : 'bg-gradient-to-br from-rose-50/40 to-amber-50/40'}`} />
-                  
-                  {/* Cake Image */}
                   <div className="transition-transform duration-500 group-hover:scale-110 group-hover:-translate-y-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={`/images/${torte.file}`}
                       alt={torte.name}
                       className="w-full h-full object-contain p-4 md:p-6 drop-shadow-lg group-hover:drop-shadow-2xl transition-all duration-500"
-                      style={{ 
-                        transform: 'translateZ(20px)',
-                        backfaceVisibility: 'hidden'
-                      }}
                     />
                   </div>
                 </div>
                 
-                {/* Cake Name - GRÖSSER */}
                 <h3 className={`font-cormorant text-2xl md:text-3xl text-center transition-colors duration-300 relative z-10 font-semibold ${darkMode ? 'text-rose-200 group-hover:text-rose-100' : 'text-rose-800 group-hover:text-rose-900'}`}>
                   {torte.name}
                 </h3>
 
-                {/* Klick-Hinweis */}
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <span className={`text-sm font-medium ${darkMode ? 'text-rose-400' : 'text-rose-500'}`}>Klicken für Details</span>
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Torten Slider Section */}
+      <section className={`py-20 md:py-28 px-4 md:px-6 transition-all duration-700 ${darkMode ? 'bg-gray-900/50' : 'bg-gradient-to-b from-amber-100/40 to-rose-100/40'}`}>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className={`font-great-vibes text-5xl md:text-6xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
+              Vergleiche Torten
+            </h2>
+            <p className={`font-cormorant text-xl md:text-2xl ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
+              Stelle zwei Torten gegenüber und entscheide dich!
+            </p>
+          </div>
+
+          <div className={`rounded-3xl p-6 md:p-10 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              {/* Left Cake */}
+              <div className="text-center">
+                <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/images/${torten[sliderCake1].file}`}
+                    alt={torten[sliderCake1].name}
+                    className="w-full h-full object-contain drop-shadow-xl"
+                  />
+                </div>
+                <h3 className={`font-great-vibes text-3xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
+                  {torten[sliderCake1].name}
+                </h3>
+                <select
+                  value={sliderCake1}
+                  onChange={(e) => setSliderCake1(Number(e.target.value))}
+                  className={`w-full p-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-700'}`}
+                >
+                  {torten.map((t, i) => (
+                    <option key={i} value={i}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* VS */}
+              <div className="hidden md:flex flex-col items-center justify-center">
+                <div className={`text-4xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-500'}`}>VS</div>
+              </div>
+
+              {/* Right Cake */}
+              <div className="text-center">
+                <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/images/${torten[sliderCake2].file}`}
+                    alt={torten[sliderCake2].name}
+                    className="w-full h-full object-contain drop-shadow-xl"
+                  />
+                </div>
+                <h3 className={`font-great-vibes text-3xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
+                  {torten[sliderCake2].name}
+                </h3>
+                <select
+                  value={sliderCake2}
+                  onChange={(e) => setSliderCake2(Number(e.target.value))}
+                  className={`w-full p-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-700'}`}
+                >
+                  {torten.map((t, i) => (
+                    <option key={i} value={i}>{t.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -632,6 +829,19 @@ export default function Home() {
               {/* Bild */}
               <div className={`w-full md:w-1/2 p-6 md:p-10 flex items-center justify-center ${darkMode ? 'bg-gradient-to-br from-gray-700 to-gray-800' : 'bg-gradient-to-br from-rose-50 to-amber-50'}`}>
                 <div className="relative w-full max-w-md aspect-square animate-cake-bounce">
+                  {/* Glitzer */}
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
+                      style={{
+                        left: `${10 + Math.random() * 80}%`,
+                        top: `${10 + Math.random() * 80}%`,
+                        animationDelay: `${i * 0.2}s`,
+                        boxShadow: '0 0 8px 3px rgba(251, 191, 36, 0.5)',
+                      }}
+                    />
+                  ))}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/images/${selectedCake.file}`}
@@ -656,9 +866,40 @@ export default function Home() {
                   {selectedCake.description}
                 </p>
 
-                <div className={`pt-6 ${darkMode ? 'border-gray-700' : 'border-rose-100'} border-t`}>
+                {/* Share Buttons */}
+                <div className={`pt-6 mb-6 ${darkMode ? 'border-gray-700' : 'border-rose-100'} border-t`}>
+                  <p className={`font-cormorant text-lg mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
+                    Teile diese Torte:
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => shareOnWhatsApp(selectedCake.name)}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </button>
+                    <button
+                      onClick={() => shareOnFacebook(selectedCake.name)}
+                      className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors"
+                    >
+                      <Facebook className="w-4 h-4" />
+                      Facebook
+                    </button>
+                    <button
+                      onClick={() => shareOnPinterest(selectedCake.name)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Pinterest
+                    </button>
+                  </div>
+                </div>
+
+                {/* QR Code for this cake */}
+                <div className={`${darkMode ? 'border-gray-700' : 'border-rose-100'} border-t pt-6`}>
                   <p className={`font-cormorant text-lg italic ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
-                    Interessiert? Kontaktiere mich auf Instagram für eine Beratung und Bestellung!
+                    📱 Scanne den QR-Code für Instagram!
                   </p>
                 </div>
               </div>
@@ -668,26 +909,19 @@ export default function Home() {
       )}
 
       {/* Quiz Section */}
-      <section className={`py-20 md:py-28 px-4 md:px-6 ${darkMode ? 'bg-gray-800/50' : 'bg-gradient-to-b from-rose-100/40 to-amber-100/40'}`}>
+      <section className={`py-20 md:py-28 px-4 md:px-6 transition-all duration-700 ${darkMode ? 'bg-gray-800/50' : 'bg-gradient-to-b from-rose-100/40 to-amber-100/40'}`}>
         <div className="max-w-4xl mx-auto">
-          {/* Section Title */}
           <div className="text-center mb-12">
-            <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-4 transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
+            <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
               Welche Torte passt zu dir?
             </h2>
-            <div className="flex items-center justify-center gap-3 mb-5">
-              <span className="w-16 h-px bg-rose-300/60" />
-              <Sparkles className={`w-6 h-6 ${darkMode ? 'text-rose-500' : 'text-rose-400'}`} />
-              <span className="w-16 h-px bg-rose-300/60" />
-            </div>
-            <p className={`font-cormorant text-2xl md:text-3xl max-w-xl mx-auto transition-colors duration-500 ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
+            <p className={`font-cormorant text-2xl md:text-3xl ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
               Finde deine perfekte Traum-Torte!
             </p>
           </div>
 
           <div className={`rounded-3xl p-6 md:p-10 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
             {!quizStarted && !quizResult ? (
-              // Start Screen
               <div className="text-center">
                 <div className="text-6xl mb-6">🎂✨🍰</div>
                 <h3 className={`font-great-vibes text-3xl md:text-4xl mb-6 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
@@ -704,10 +938,22 @@ export default function Home() {
                 </button>
               </div>
             ) : quizResult ? (
-              // Result Screen
               <div className="text-center">
                 <div className="text-4xl mb-4">🎉 Deine perfekte Torte! 🎉</div>
                 <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-6 animate-cake-bounce">
+                  {/* Glitzer around result */}
+                  {[...Array(10)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        animationDelay: `${i * 0.15}s`,
+                        boxShadow: '0 0 8px 2px rgba(251, 191, 36, 0.6)',
+                      }}
+                    />
+                  ))}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={`/images/${quizResult.file}`}
@@ -740,9 +986,7 @@ export default function Home() {
                 </div>
               </div>
             ) : (
-              // Question Screen
               <div>
-                {/* Progress */}
                 <div className="flex justify-center gap-2 mb-8">
                   {quizQuestions.map((_, i) => (
                     <div
@@ -784,9 +1028,8 @@ export default function Home() {
       </section>
 
       {/* Instagram Section */}
-      <section className={`py-20 md:py-28 px-4 md:px-6 ${darkMode ? 'bg-gray-900/50' : 'bg-gradient-to-b from-transparent via-rose-100/40 to-rose-100/60'}`}>
+      <section className={`py-20 md:py-28 px-4 md:px-6 transition-all duration-700 ${darkMode ? 'bg-gray-900/50' : 'bg-gradient-to-b from-transparent via-rose-100/40 to-rose-100/60'}`}>
         <div className="max-w-4xl mx-auto text-center">
-          {/* Decorative element */}
           <div className="flex justify-center mb-8">
             <div className="flex items-center gap-3">
               <span className="w-10 h-px bg-rose-300/60" />
@@ -795,15 +1038,14 @@ export default function Home() {
             </div>
           </div>
 
-          <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-5 transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
+          <h2 className={`font-great-vibes text-5xl md:text-6xl lg:text-7xl mb-5 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
             Folge mir auf Instagram
           </h2>
-          <p className={`font-cormorant text-2xl md:text-3xl mb-12 md:mb-14 max-w-md mx-auto transition-colors duration-500 ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
+          <p className={`font-cormorant text-2xl md:text-3xl mb-12 md:mb-14 ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
             Lass dich täglich inspirieren und entdecke meine neuesten Kreationen
           </p>
 
           <div className="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14">
-            {/* QR Code */}
             <div className={`group p-6 md:p-8 rounded-3xl shadow-xl border hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-rose-100/50'}`}>
               <div className="relative w-52 h-52 md:w-60 md:h-60">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -815,7 +1057,6 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Instagram Link */}
             <a
               href="https://instagram.com/nathalies_tortenwelt"
               target="_blank"
@@ -830,15 +1071,15 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className={`py-10 md:py-12 px-4 border-t transition-colors duration-500 ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-rose-100/40 border-rose-200/30'}`}>
+      <footer className={`py-10 md:py-12 px-4 border-t transition-colors duration-700 ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-rose-100/40 border-rose-200/30'}`}>
         <div className="max-w-4xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Heart className={`w-5 h-5 ${darkMode ? 'text-rose-500' : 'text-rose-400'} fill-current`} />
           </div>
-          <p className={`font-great-vibes text-3xl md:text-4xl mb-2 transition-colors duration-500 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
+          <p className={`font-great-vibes text-3xl md:text-4xl mb-2 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
             Nathalies Tortenwelt
           </p>
-          <p className={`font-cormorant text-lg transition-colors duration-500 ${darkMode ? 'text-gray-400' : 'text-rose-600/70'}`}>
+          <p className={`font-cormorant text-lg ${darkMode ? 'text-gray-400' : 'text-rose-600/70'}`}>
             © {new Date().getFullYear()} Alle Rechte vorbehalten
           </p>
         </div>
@@ -851,82 +1092,74 @@ export default function Home() {
         }
         
         @keyframes float {
-          0%, 100% {
-            transform: translateY(0px);
-          }
-          50% {
-            transform: translateY(-15px);
-          }
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-15px); }
         }
         .animate-float {
           animation: float 4s ease-in-out infinite;
         }
         
         @keyframes float-slow {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          50% {
-            transform: translateY(-20px) rotate(10deg);
-          }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(10deg); }
         }
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
         }
         
         @keyframes modal-in {
-          0% {
-            opacity: 0;
-            transform: scale(0.9);
-          }
-          100% {
-            opacity: 1;
-            transform: scale(1);
-          }
+          0% { opacity: 0; transform: scale(0.9); }
+          100% { opacity: 1; transform: scale(1); }
         }
         .animate-modal-in {
           animation: modal-in 0.3s ease-out forwards;
         }
         
-        @keyframes heart-fade {
-          0% {
-            opacity: 1;
-            transform: scale(1);
-          }
-          100% {
-            opacity: 0;
-            transform: scale(0.5) translateY(-20px);
-          }
+        @keyframes confetti {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
-        .animate-heart-fade {
-          animation: heart-fade 0.8s ease-out forwards;
+        .animate-confetti {
+          animation: confetti 3s ease-out forwards;
+        }
+        
+        @keyframes sparkle {
+          0%, 100% { opacity: 0; transform: scale(0); }
+          50% { opacity: 1; transform: scale(1); }
+        }
+        .animate-sparkle {
+          animation: sparkle 1.5s ease-in-out infinite;
         }
         
         @keyframes cake-bounce {
-          0%, 100% {
-            transform: scale(1) rotate(0deg);
-          }
-          25% {
-            transform: scale(1.05) rotate(-2deg);
-          }
-          50% {
-            transform: scale(1.1) rotate(0deg);
-          }
-          75% {
-            transform: scale(1.05) rotate(2deg);
-          }
+          0%, 100% { transform: scale(1) rotate(0deg); }
+          25% { transform: scale(1.03) rotate(-1deg); }
+          50% { transform: scale(1.05) rotate(0deg); }
+          75% { transform: scale(1.03) rotate(1deg); }
         }
         .animate-cake-bounce {
           animation: cake-bounce 2s ease-in-out infinite;
         }
         
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+        .animate-blink {
+          animation: blink 0.8s infinite;
+        }
+        
+        @keyframes day-night {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        .animate-day-night {
+          animation: day-night 0.5s ease-in-out;
+        }
+        
         .writing-vertical {
           writing-mode: vertical-rl;
           text-orientation: mixed;
-        }
-        
-        .hover\\:rotate-y-12:hover {
-          transform: perspective(1000px) rotateY(12deg) rotateX(3deg);
         }
         
         .hover\\:scale-102:hover {
