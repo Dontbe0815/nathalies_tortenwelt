@@ -10,7 +10,11 @@ const torten = [
   { name: 'Käse Sahne Torte mit Fondantdecke', file: 'kaese-sahne-torte.png' },
   { name: 'Marzipan Torte', file: 'marzipan-torte.png' },
   { name: 'Schoko Bananen Torte', file: 'schoko-bananen-torte.png' },
-  { name: 'Schwarzwälder Kirschtorte', file: 'schwarzwaelder-kirschtorte.png' },
+  { name: 'Schwarzwälder Kirsch Torte', file: 'schwarzwaelder-kirschtorte.png' },
+  { name: 'Nutella Torte', file: 'nutella.png' },
+  { name: 'Oreo Torte', file: 'oreo.png' },
+  { name: 'Wunsch Torte', file: 'wunsch.png' },
+  { name: 'Überraschungs Torte', file: 'mystery.png' },
 ]
 
 export default function Home() {
