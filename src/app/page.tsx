@@ -378,7 +378,7 @@ export default function Home() {
   const [currentFactIndex, setCurrentFactIndex] = useState(0)
   const [factFadeIn, setFactFadeIn] = useState(true)
   
-  // Backgeräusche (Ambient Sound)
+  // Hintergrundmusik
   const [isAmbientPlaying, setIsAmbientPlaying] = useState(false)
   const ambientOscillatorsRef = useRef<OscillatorNode[]>([])
   const ambientGainRef = useRef<GainNode | null>(null)
@@ -496,97 +496,94 @@ export default function Home() {
     }
   }, [])
 
-  // Ambient Baking Sound Functions
-  const startAmbientSound = useCallback(() => {
+  // Sanfte Hintergrundmusik Funktionen
+  const startBackgroundMusic = useCallback(() => {
     try {
       if (!audioContextRef.current) {
         audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
       }
       const ctx = audioContextRef.current
       
-      // Master gain for volume control
+      // Master gain - sehr leise und sanft
       const masterGain = ctx.createGain()
-      masterGain.gain.setValueAtTime(0.05, ctx.currentTime)
+      masterGain.gain.setValueAtTime(0.06, ctx.currentTime)
       masterGain.connect(ctx.destination)
       ambientGainRef.current = masterGain
       
-      // Mixer whirring sound (low frequency oscillation)
-      const mixerOsc = ctx.createOscillator()
-      mixerOsc.type = 'sine'
-      mixerOsc.frequency.setValueAtTime(120, ctx.currentTime)
+      // Sanfte Melodie - Noten einer entspannten C-Dur Melodie
+      const notes = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 392.00, 349.23] // C-Dur Töne
+      let noteIndex = 0
       
-      const mixerGain = ctx.createGain()
-      mixerGain.gain.setValueAtTime(0.3, ctx.currentTime)
+      const oscillators: OscillatorNode[] = []
       
-      // LFO for mixer variation
-      const mixerLfo = ctx.createOscillator()
-      mixerLfo.type = 'sine'
-      mixerLfo.frequency.setValueAtTime(0.5, ctx.currentTime)
-      const mixerLfoGain = ctx.createGain()
-      mixerLfoGain.gain.setValueAtTime(15, ctx.currentTime)
-      mixerLfo.connect(mixerLfoGain)
-      mixerLfoGain.connect(mixerOsc.frequency)
+      // Hintergrund-Akkord (Pad) - C-Dur
+      const padNotes = [261.63, 329.63, 392.00] // C-Dur Akkord
+      padNotes.forEach((freq, i) => {
+        const padOsc = ctx.createOscillator()
+        const padGain = ctx.createGain()
+        
+        padOsc.type = 'sine'
+        padOsc.frequency.setValueAtTime(freq, ctx.currentTime)
+        padGain.gain.setValueAtTime(0.02, ctx.currentTime)
+        
+        // Sanftes Vibrato
+        const lfo = ctx.createOscillator()
+        lfo.type = 'sine'
+        lfo.frequency.setValueAtTime(3 + i * 0.3, ctx.currentTime)
+        const lfoGain = ctx.createGain()
+        lfoGain.gain.setValueAtTime(1.5, ctx.currentTime)
+        lfo.connect(lfoGain)
+        lfoGain.connect(padOsc.frequency)
+        
+        padOsc.connect(padGain)
+        padGain.connect(masterGain)
+        
+        padOsc.start()
+        lfo.start()
+        oscillators.push(padOsc, lfo)
+      })
       
-      mixerOsc.connect(mixerGain)
-      mixerGain.connect(masterGain)
-      mixerOsc.start()
-      mixerLfo.start()
+      // Melodie spielen
+      const playNote = () => {
+        if (!isAmbientPlaying && oscillators.length > 0) return
+        
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        
+        osc.type = 'sine'
+        const note = notes[noteIndex % notes.length]
+        osc.frequency.setValueAtTime(note, ctx.currentTime)
+        
+        // Sanfter Anschlag und Release
+        gain.gain.setValueAtTime(0, ctx.currentTime)
+        gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + 0.15)
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 2)
+        
+        osc.connect(gain)
+        gain.connect(masterGain)
+        
+        osc.start(ctx.currentTime)
+        osc.stop(ctx.currentTime + 2)
+        
+        noteIndex++
+        
+        // Nächste Note nach sanftem Timing
+        const nextNoteTime = 1500 + Math.random() * 1000
+        ;(window as unknown as { musicTimeout?: NodeJS.Timeout }).musicTimeout = setTimeout(playNote, nextNoteTime)
+      }
       
-      // Oven hum sound (very low frequency)
-      const ovenOsc = ctx.createOscillator()
-      ovenOsc.type = 'sine'
-      ovenOsc.frequency.setValueAtTime(60, ctx.currentTime)
+      ambientOscillatorsRef.current = oscillators
       
-      const ovenGain = ctx.createGain()
-      ovenGain.gain.setValueAtTime(0.2, ctx.currentTime)
-      
-      // LFO for oven hum variation
-      const ovenLfo = ctx.createOscillator()
-      ovenLfo.type = 'sine'
-      ovenLfo.frequency.setValueAtTime(0.1, ctx.currentTime)
-      const ovenLfoGain = ctx.createGain()
-      ovenLfoGain.gain.setValueAtTime(5, ctx.currentTime)
-      ovenLfo.connect(ovenLfoGain)
-      ovenLfoGain.connect(ovenOsc.frequency)
-      
-      ovenOsc.connect(ovenGain)
-      ovenGain.connect(masterGain)
-      ovenOsc.start()
-      ovenLfo.start()
-      
-      // Air/bubbles sound (higher frequency, random)
-      const airOsc = ctx.createOscillator()
-      airOsc.type = 'sine'
-      airOsc.frequency.setValueAtTime(800, ctx.currentTime)
-      
-      const airGain = ctx.createGain()
-      airGain.gain.setValueAtTime(0, ctx.currentTime)
-      
-      // Random bubbles
-      const bubbleInterval = setInterval(() => {
-        if (airGain.gain && ctx.state === 'running') {
-          const now = ctx.currentTime
-          airGain.gain.setValueAtTime(0, now)
-          airGain.gain.linearRampToValueAtTime(0.1, now + 0.05)
-          airGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
-          airOsc.frequency.setValueAtTime(600 + Math.random() * 400, now)
-        }
-      }, 500 + Math.random() * 1500)
-      
-      airOsc.connect(airGain)
-      airGain.connect(masterGain)
-      airOsc.start()
-      
-      ambientOscillatorsRef.current = [mixerOsc, mixerLfo, ovenOsc, ovenLfo, airOsc]
-      ;(window as unknown as { bubbleInterval?: NodeJS.Timeout }).bubbleInterval = bubbleInterval
+      // Melodie starten
+      playNote()
       
       setIsAmbientPlaying(true)
     } catch {
       console.log('Audio not supported')
     }
-  }, [])
+  }, [isAmbientPlaying])
 
-  const stopAmbientSound = useCallback(() => {
+  const stopBackgroundMusic = useCallback(() => {
     try {
       ambientOscillatorsRef.current.forEach(osc => {
         try {
@@ -597,22 +594,22 @@ export default function Home() {
       })
       ambientOscillatorsRef.current = []
       
-      const bubbleInterval = (window as unknown as { bubbleInterval?: NodeJS.Timeout }).bubbleInterval
-      if (bubbleInterval) {
-        clearInterval(bubbleInterval)
+      const musicTimeout = (window as unknown as { musicTimeout?: NodeJS.Timeout }).musicTimeout
+      if (musicTimeout) {
+        clearTimeout(musicTimeout)
       }
       
       setIsAmbientPlaying(false)
     } catch {
-      console.log('Error stopping ambient sound')
+      console.log('Error stopping music')
     }
   }, [])
 
-  const toggleAmbientSound = () => {
+  const toggleBackgroundMusic = () => {
     if (isAmbientPlaying) {
-      stopAmbientSound()
+      stopBackgroundMusic()
     } else {
-      startAmbientSound()
+      startBackgroundMusic()
     }
   }
 
@@ -907,11 +904,11 @@ export default function Home() {
         <ChevronUp className="w-6 h-6 md:w-7 md:h-7" />
       </button>
 
-      {/* Ambient Sound Toggle Button */}
+      {/* Hintergrundmusik Toggle Button */}
       <button
-        onClick={toggleAmbientSound}
-        className={`fixed right-4 md:right-6 bottom-40 z-50 p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 ${isAmbientPlaying ? 'bg-amber-500 text-white' : darkMode ? 'bg-gray-700 text-rose-300' : 'bg-white text-rose-700'}`}
-        aria-label={isAmbientPlaying ? 'Ambient Sound ausschalten' : 'Ambient Sound einschalten'}
+        onClick={toggleBackgroundMusic}
+        className={`fixed right-4 md:right-6 bottom-40 z-50 p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 ${isAmbientPlaying ? 'bg-gradient-to-r from-pink-500 to-rose-500 text-white' : darkMode ? 'bg-gray-700 text-rose-300' : 'bg-white text-rose-700'}`}
+        aria-label={isAmbientPlaying ? 'Hintergrundmusik ausschalten' : 'Hintergrundmusik einschalten'}
       >
         {isAmbientPlaying ? <Volume2 className="w-6 h-6 md:w-7 md:h-7" /> : <VolumeX className="w-6 h-6 md:w-7 md:h-7" />}
       </button>
@@ -1037,14 +1034,29 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <button 
-          onClick={scrollToGallery}
-          className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3 transition-colors duration-500 cursor-pointer group ${darkMode ? 'text-rose-300 hover:text-rose-200' : 'text-rose-700 hover:text-rose-800'}`}
-        >
-          <span className="font-cormorant text-xl md:text-2xl font-bold tracking-wide">Entdecken</span>
-          <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
-        </button>
+        {/* Scroll Indicator mit QR Code */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3">
+          <button 
+            onClick={scrollToGallery}
+            className={`flex flex-col items-center gap-3 transition-colors duration-500 cursor-pointer group ${darkMode ? 'text-rose-300 hover:text-rose-200' : 'text-rose-700 hover:text-rose-800'}`}
+          >
+            <span className="font-cormorant text-xl md:text-2xl font-bold tracking-wide">Entdecken</span>
+            <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
+          </button>
+          
+          {/* QR Code */}
+          <div className={`mt-4 p-2 rounded-xl backdrop-blur-sm transition-all duration-300 ${darkMode ? 'bg-gray-800/70' : 'bg-white/70'}`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/qr.png"
+              alt="Instagram QR Code"
+              className="w-20 h-20 md:w-24 md:h-24 object-contain"
+            />
+            <p className={`text-xs text-center mt-1 font-cormorant ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
+              @nathalies_tortenwelt
+            </p>
+          </div>
+        </div>
       </section>
 
       {/* Wave Divider: Hero → Gallery */}
