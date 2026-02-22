@@ -820,30 +820,27 @@ export default function Home() {
         />
       </div>
 
-      {/* Schwebende Zutaten (Floating Ingredients) */}
+      {/* Schwebende Zutaten (Floating Ingredients) - Reduziert für Performance */}
       <div className="fixed inset-0 pointer-events-none z-5 overflow-hidden">
-        {floatingIngredients.map((emoji, i) => {
+        {floatingIngredients.slice(0, 6).map((emoji, i) => {
           const positions = [
             { left: '5%', top: '15%' },
             { left: '15%', top: '70%' },
-            { left: '25%', top: '35%' },
             { left: '75%', top: '20%' },
             { left: '85%', top: '55%' },
-            { left: '45%', top: '80%' },
             { left: '55%', top: '10%' },
             { left: '35%', top: '60%' },
-            { left: '65%', top: '75%' },
-            { left: '90%', top: '40%' },
           ]
           return (
             <div
               key={i}
-              className={`absolute text-3xl md:text-4xl animate-float-ingredient transition-opacity duration-500 ${darkMode ? 'opacity-10' : 'opacity-15'}`}
+              className={`absolute text-3xl md:text-4xl animate-float-ingredient ${darkMode ? 'opacity-10' : 'opacity-15'}`}
               style={{
                 left: positions[i].left,
                 top: positions[i].top,
-                animationDelay: `${i * 0.7}s`,
-                animationDuration: `${12 + i * 1.5}s`,
+                animationDelay: `${i * 1}s`,
+                animationDuration: `${15 + i * 2}s`,
+                willChange: 'transform',
               }}
             >
               {emoji}
@@ -931,23 +928,25 @@ export default function Home() {
       {/* Torte mit Augen (Cake with Eyes) */}
       <CakeWithEyes darkMode={darkMode} mousePosition={mousePosition} />
 
-      {/* Parallax Floating Cakes */}
+      {/* Parallax Floating Cakes - Optimiert für smoother Scroll */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
-        {torten.slice(0, 5).map((torte, index) => (
+        {torten.slice(0, 3).map((torte, index) => (
           <div
             key={index}
-            className="absolute opacity-10 transition-transform duration-100"
+            className="absolute opacity-[0.08]"
             style={{
-              left: `${5 + index * 18}%`,
-              top: `${10 + (index % 3) * 30}%`,
-              transform: `translateY(${scrollY * (0.1 + index * 0.05)}px) rotate(${scrollY * 0.02}deg)`,
+              left: `${15 + index * 25}%`,
+              top: `${15 + (index % 2) * 40}%`,
+              transform: `translate3d(0, ${scrollY * (0.08 + index * 0.03)}px, 0)`,
+              willChange: 'transform',
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={`/images/${torte.file}`}
               alt=""
-              className="w-24 h-24 md:w-32 md:h-32 object-contain"
+              className="w-20 h-20 md:w-28 md:h-28 object-contain"
+              loading="lazy"
             />
           </div>
         ))}
@@ -959,7 +958,10 @@ export default function Home() {
         {/* Background Logo */}
         <div 
           className="absolute inset-0 z-0"
-          style={{ transform: `scale(1.05) translateY(${scrollY * 0.2}px)` }}
+          style={{ 
+            transform: `scale(1.05) translate3d(0, ${scrollY * 0.15}px, 0)`,
+            willChange: 'transform',
+          }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -987,7 +989,10 @@ export default function Home() {
         {/* Main Content */}
         <div 
           className={`relative z-30 px-4 transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}
-          style={{ transform: `translateY(${scrollY * 0.15}px)` }}
+          style={{ 
+            transform: `translate3d(0, ${scrollY * 0.1}px, 0)`,
+            willChange: 'transform',
+          }}
         >
           <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
             
@@ -996,8 +1001,8 @@ export default function Home() {
               className="relative w-64 h-64 md:w-80 md:h-80 lg:w-[28rem] lg:h-[28rem] flex-shrink-0 animate-float cursor-pointer group"
               onClick={handleLogoClick}
             >
-              {/* Glitzer effects */}
-              {Array.from({ length: 12 }, (_, i) => (
+              {/* Glitzer effects - reduziert für Performance */}
+              {Array.from({ length: 6 }, (_, i) => (
                 <div
                   key={i}
                   className="absolute w-2 h-2 bg-amber-400 rounded-full animate-sparkle"
@@ -1046,31 +1051,42 @@ export default function Home() {
                 </p>
               )}
             </div>
+            
+            {/* QR Code - Rechts vom Text (nur Desktop) */}
+            <div className={`hidden lg:flex flex-col items-center p-3 rounded-2xl backdrop-blur-sm transition-all duration-300 ${darkMode ? 'bg-gray-800/60' : 'bg-white/60'}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/qr.png"
+                alt="Instagram QR Code"
+                className="w-28 h-28 object-contain"
+              />
+              <p className={`text-sm text-center mt-2 font-cormorant font-semibold ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
+                @nathalies_tortenwelt
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Scroll Indicator mit QR Code */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3">
-          <button 
-            onClick={scrollToGallery}
-            className={`flex flex-col items-center gap-3 transition-colors duration-500 cursor-pointer group ${darkMode ? 'text-rose-300 hover:text-rose-200' : 'text-rose-700 hover:text-rose-800'}`}
-          >
-            <span className="font-cormorant text-xl md:text-2xl font-bold tracking-wide">Entdecken</span>
-            <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
-          </button>
-          
-          {/* QR Code */}
-          <div className={`mt-4 p-2 rounded-xl backdrop-blur-sm transition-all duration-300 ${darkMode ? 'bg-gray-800/70' : 'bg-white/70'}`}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/qr.png"
-              alt="Instagram QR Code"
-              className="w-20 h-20 md:w-24 md:h-24 object-contain"
-            />
-            <p className={`text-xs text-center mt-1 font-cormorant ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
-              @nathalies_tortenwelt
-            </p>
-          </div>
+        {/* Scroll Indicator */}
+        <button 
+          onClick={scrollToGallery}
+          className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3 transition-colors duration-500 cursor-pointer group ${darkMode ? 'text-rose-300 hover:text-rose-200' : 'text-rose-700 hover:text-rose-800'}`}
+        >
+          <span className="font-cormorant text-xl md:text-2xl font-bold tracking-wide">Entdecken</span>
+          <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
+        </button>
+        
+        {/* QR Code - Unten (nur Mobile) */}
+        <div className={`lg:hidden absolute bottom-28 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center p-2 rounded-xl backdrop-blur-sm ${darkMode ? 'bg-gray-800/70' : 'bg-white/70'}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/qr.png"
+            alt="Instagram QR Code"
+            className="w-16 h-16 object-contain"
+          />
+          <p className={`text-xs text-center mt-1 font-cormorant ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
+            @nathalies_tortenwelt
+          </p>
         </div>
       </section>
 
@@ -1150,19 +1166,21 @@ export default function Home() {
             Torten-Fakten 🎂
           </h2>
           
-          <div className={`relative min-h-[120px] md:min-h-[100px] rounded-3xl p-6 md:p-8 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className={`relative h-[160px] md:h-[140px] rounded-3xl p-6 md:p-8 shadow-xl overflow-hidden ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
             {/* Decorative elements */}
             <div className="absolute top-4 left-4 text-2xl">📚</div>
             <div className="absolute top-4 right-4 text-2xl">💡</div>
             
-            <p 
-              className={`font-cormorant text-xl md:text-2xl lg:text-3xl transition-all duration-500 ${factFadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}
-            >
-              {tortenFakten[currentFactIndex]}
-            </p>
+            <div className="h-full flex flex-col justify-center">
+              <p 
+                className={`font-cormorant text-xl md:text-2xl lg:text-3xl transition-all duration-500 ${factFadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}
+              >
+                {tortenFakten[currentFactIndex]}
+              </p>
+            </div>
             
-            {/* Carousel Indicators */}
-            <div className="flex justify-center gap-2 mt-6">
+            {/* Carousel Indicators - Fixed at bottom */}
+            <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
               {tortenFakten.map((_, i) => (
                 <button
                   key={i}
@@ -1477,17 +1495,34 @@ export default function Home() {
           scroll-behavior: smooth;
         }
         
+        /* Performance Optimierungen */
+        * {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* GPU-Beschleunigung für animierte Elemente */
+        .animate-float,
+        .animate-float-slow,
+        .animate-float-ingredient,
+        .animate-sparkle,
+        .animate-cake-bounce {
+          transform: translateZ(0);
+          backface-visibility: hidden;
+          perspective: 1000px;
+        }
+        
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-15px); }
+          0%, 100% { transform: translateY(0px) translateZ(0); }
+          50% { transform: translateY(-15px) translateZ(0); }
         }
         .animate-float {
           animation: float 4s ease-in-out infinite;
         }
         
         @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(10deg); }
+          0%, 100% { transform: translateY(0px) rotate(0deg) translateZ(0); }
+          50% { transform: translateY(-20px) rotate(10deg) translateZ(0); }
         }
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
@@ -1495,20 +1530,14 @@ export default function Home() {
         
         @keyframes float-ingredient {
           0%, 100% { 
-            transform: translateY(0px) rotate(0deg) scale(1); 
-          }
-          25% { 
-            transform: translateY(-30px) rotate(5deg) scale(1.1); 
+            transform: translateY(0px) rotate(0deg) translateZ(0); 
           }
           50% { 
-            transform: translateY(-15px) rotate(-3deg) scale(1); 
-          }
-          75% { 
-            transform: translateY(-25px) rotate(8deg) scale(1.05); 
+            transform: translateY(-20px) rotate(5deg) translateZ(0); 
           }
         }
         .animate-float-ingredient {
-          animation: float-ingredient 15s ease-in-out infinite;
+          animation: float-ingredient 18s ease-in-out infinite;
         }
         
         @keyframes modal-in {
