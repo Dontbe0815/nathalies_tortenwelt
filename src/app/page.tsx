@@ -54,6 +54,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-rose-50 via-amber-50/20 to-rose-50/30 overflow-x-hidden">
       
+      {/* Fixed Instagram Button - rechts am Rand */}
+      <a
+        href="https://instagram.com/nathalies_tortenwelt"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed right-4 md:right-6 top-1/2 -translate-y-1/2 z-50 flex flex-col items-center gap-2 bg-gradient-to-b from-pink-500 via-rose-500 to-orange-400 text-white p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 group"
+        aria-label="Instagram"
+      >
+        <Instagram className="w-6 h-6 md:w-7 md:h-7 group-hover:rotate-12 transition-transform duration-300" />
+        <span className="hidden md:block text-xs font-medium writing-vertical">Instagram</span>
+      </a>
+      
       {/* Fullscreen Hero Section */}
       <section className="relative h-screen w-full flex items-center justify-center overflow-hidden">
         
@@ -352,6 +364,11 @@ export default function Home() {
         }
         .animate-modal-in {
           animation: modal-in 0.3s ease-out forwards;
+        }
+        
+        .writing-vertical {
+          writing-mode: vertical-rl;
+          text-orientation: mixed;
         }
       `}</style>
     </div>
