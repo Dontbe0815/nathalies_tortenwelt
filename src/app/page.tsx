@@ -539,15 +539,25 @@ export default function Home() {
 
   const openCake = (cake: Torte) => {
     setSelectedCake(cake)
-    document.body.style.overflow = 'hidden'
     playMjamSound()
     triggerConfetti()
   }
 
   const closeCake = () => {
     setSelectedCake(null)
-    document.body.style.overflow = 'auto'
   }
+
+  // Handle body scroll lock when modal is open
+  useEffect(() => {
+    if (selectedCake) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'auto'
+    }
+    return () => {
+      document.body.style.overflow = 'auto'
+    }
+  }, [selectedCake])
 
   const toggleDarkMode = () => {
     setIsTransitioning(true)
@@ -793,7 +803,7 @@ export default function Home() {
 
       {/* Feiertags-Countdown (Holiday Countdown) */}
       {holidayInfo && (
-        <div className={`fixed left-1/2 -translate-x-1/2 top-16 z-40 px-4 py-2 rounded-full shadow-lg backdrop-blur-sm transition-all duration-500 ${darkMode ? 'bg-gray-800/80 text-rose-300' : 'bg-white/80 text-rose-700'}`}>
+        <div className={`fixed left-1/2 -translate-x-1/2 top-4 z-[60] px-4 py-2 rounded-full shadow-lg backdrop-blur-sm transition-all duration-500 ${darkMode ? 'bg-gray-800/90 text-rose-300' : 'bg-white/90 text-rose-700'}`}>
           <div className="flex items-center gap-2 font-cormorant text-sm md:text-base">
             <Calendar className="w-4 h-4" />
             <span className="font-semibold">
@@ -972,18 +982,7 @@ export default function Home() {
           <ChevronDown className="w-8 h-8 animate-bounce group-hover:scale-110 transition-transform" />
         </button>
         
-        {/* QR Code - Fixed unten links (nur Mobile) */}
-        <div className={`lg:hidden fixed bottom-36 left-4 z-50 flex flex-col items-center p-2 rounded-xl backdrop-blur-sm shadow-lg ${darkMode ? 'bg-gray-800/80' : 'bg-white/80'}`}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/images/qr.png"
-            alt="Instagram QR Code"
-            className="w-14 h-14 object-contain"
-          />
-          <p className={`text-xs text-center mt-1 font-cormorant ${darkMode ? 'text-rose-300' : 'text-rose-600'}`}>
-            @nathalies_tortenwelt
-          </p>
-        </div>
+
       </section>
 
       {/* Wave Divider: Hero → Gallery */}
