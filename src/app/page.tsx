@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Sparkles, Share2, MessageCircle, Facebook } from 'lucide-react'
+import { Instagram, ChevronDown, Heart, X, ChevronUp, Sun, Moon, Sparkles, Share2, MessageCircle, Facebook, Volume2, VolumeX, Calendar } from 'lucide-react'
 
 interface Torte {
   name: string
@@ -76,6 +76,18 @@ const quizQuestions: QuizQuestion[] = [
   },
 ]
 
+// Torten-Fakten für das Karussell
+const tortenFakten: string[] = [
+  "Wusstest du? Die Schwarzwälder Kirschtorte wurde 1915 in Bad Godesberg erfunden!",
+  "Der weltweite Tortenrekord: Die größte Torte wog über 70 Tonnen!",
+  "Vanille ist die beliebteste Tortenfüllung der Welt!",
+  "Die älteste Torte der Welt ist über 100 Jahre alt!",
+  "In Deutschland werden jährlich über 300 Millionen Torten gegessen!",
+]
+
+// Schwebende Zutaten
+const floatingIngredients = ['🥚', '🌾', '🥛', '🍫', '🫧', '🍯', '🧈', '🍓', '🥜', '🫐']
+
 type Season = 'default' | 'valentine' | 'easter' | 'christmas'
 
 const getSeason = (): Season => {
@@ -88,6 +100,53 @@ const getSeason = (): Season => {
   if (month === 11) return 'christmas'
   
   return 'default'
+}
+
+// Feiertags-Countdown berechnen
+interface HolidayInfo {
+  name: string
+  emoji: string
+  date: Date
+}
+
+const getNextHoliday = (): HolidayInfo => {
+  const now = new Date()
+  const currentYear = now.getFullYear()
+  
+  // Ostern berechnen (vereinfacht - approximativ)
+  const getEasterDate = (year: number): Date => {
+    const a = year % 19
+    const b = Math.floor(year / 100)
+    const c = year % 100
+    const d = Math.floor(b / 4)
+    const e = b % 4
+    const f = Math.floor((b + 8) / 25)
+    const g = Math.floor((b - f + 1) / 3)
+    const h = (19 * a + b - d - g + 15) % 30
+    const i = Math.floor(c / 4)
+    const k = c % 4
+    const l = (32 + 2 * e + 2 * i - h - k) % 7
+    const m = Math.floor((a + 11 * h + 22 * l) / 451)
+    const month = Math.floor((h + l - 7 * m + 114) / 31) - 1
+    const day = ((h + l - 7 * m + 114) % 31) + 1
+    return new Date(year, month, day)
+  }
+  
+  const holidays: HolidayInfo[] = [
+    { name: 'Valentinstag', emoji: '💕', date: new Date(currentYear, 1, 14) },
+    { name: 'Ostern', emoji: '🐰', date: getEasterDate(currentYear) },
+    { name: 'Weihnachten', emoji: '🎄', date: new Date(currentYear, 11, 25) },
+  ]
+  
+  // Filter holidays that are in the future
+  const futureHolidays = holidays.filter(h => h.date > now)
+  
+  if (futureHolidays.length > 0) {
+    return futureHolidays[0]
+  }
+  
+  // If no holidays left this year, return Valentine's of next year
+  return { name: 'Valentinstag', emoji: '💕', date: new Date(currentYear + 1, 1, 14) }
 }
 
 interface SeasonConfig {
@@ -173,6 +232,114 @@ const Typewriter = ({ text, delay = 50 }: { text: string; delay?: number }) => {
   return <span>{displayText}<span className="animate-blink">|</span></span>
 }
 
+// Torte mit Augen Component
+const CakeWithEyes = ({ darkMode, mousePosition }: { darkMode: boolean; mousePosition: { x: number; y: number } }) => {
+  const cakeRef = useRef<HTMLDivElement>(null)
+  const [eyeAngle, setEyeAngle] = useState({ left: 0, right: 0 })
+  
+  useEffect(() => {
+    if (cakeRef.current) {
+      const rect = cakeRef.current.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      
+      const angleLeft = Math.atan2(mousePosition.y - centerY, mousePosition.x - centerX - 10)
+      const angleRight = Math.atan2(mousePosition.y - centerY, mousePosition.x - centerX + 10)
+      
+      setEyeAngle({ left: angleLeft, right: angleRight })
+    }
+  }, [mousePosition])
+  
+  const pupilOffset = 3
+  
+  return (
+    <div 
+      ref={cakeRef}
+      className={`fixed bottom-24 left-4 md:left-6 z-40 cursor-pointer transition-transform hover:scale-110 ${darkMode ? 'opacity-60 hover:opacity-80' : 'opacity-70 hover:opacity-90'}`}
+    >
+      {/* Cake Body */}
+      <div className="relative">
+        {/* Cake layers */}
+        <div className="w-16 h-6 md:w-20 md:h-8 bg-gradient-to-b from-pink-300 to-pink-400 rounded-t-lg shadow-md" />
+        <div className="w-18 h-5 md:w-22 md:h-7 bg-gradient-to-b from-rose-300 to-rose-400 -mt-0.5 rounded-t-lg shadow-md" style={{ marginLeft: '-4px', marginRight: '-4px' }} />
+        <div className="w-20 h-6 md:w-24 md:h-8 bg-gradient-to-b from-amber-200 to-amber-300 -mt-0.5 rounded-b-lg shadow-md" style={{ marginLeft: '-6px', marginRight: '-6px' }} />
+        
+        {/* Frosting drips */}
+        <div className="absolute top-0 left-0 right-0 flex justify-around">
+          {[...Array(5)].map((_, i) => (
+            <div 
+              key={i}
+              className="w-1.5 h-3 bg-pink-200 rounded-b-full"
+              style={{ height: `${4 + (i % 3) * 2}px` }}
+            />
+          ))}
+        </div>
+        
+        {/* Cherry on top */}
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+          <div className="w-4 h-4 bg-gradient-to-b from-red-400 to-red-600 rounded-full shadow-md">
+            <div className="absolute -top-2 left-1/2 w-0.5 h-2 bg-green-600 rounded-full" />
+          </div>
+        </div>
+        
+        {/* Face Container */}
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 flex gap-2 md:gap-3">
+          {/* Left Eye */}
+          <div className="relative w-4 h-4 md:w-5 md:h-5 bg-white rounded-full shadow-inner flex items-center justify-center border border-gray-200">
+            <div 
+              className="w-2 h-2 md:w-2.5 md:h-2.5 bg-gray-800 rounded-full transition-transform duration-100"
+              style={{
+                transform: `translate(${Math.cos(eyeAngle.left) * pupilOffset}px, ${Math.sin(eyeAngle.left) * pupilOffset}px)`
+              }}
+            />
+            <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-white rounded-full" />
+          </div>
+          
+          {/* Right Eye */}
+          <div className="relative w-4 h-4 md:w-5 md:h-5 bg-white rounded-full shadow-inner flex items-center justify-center border border-gray-200">
+            <div 
+              className="w-2 h-2 md:w-2.5 md:h-2.5 bg-gray-800 rounded-full transition-transform duration-100"
+              style={{
+                transform: `translate(${Math.cos(eyeAngle.right) * pupilOffset}px, ${Math.sin(eyeAngle.right) * pupilOffset}px)`
+              }}
+            />
+            <div className="absolute top-0.5 right-0.5 w-1 h-1 bg-white rounded-full" />
+          </div>
+        </div>
+        
+        {/* Blush */}
+        <div className="absolute top-6 left-1 w-2 h-1 bg-pink-300 rounded-full opacity-60" />
+        <div className="absolute top-6 right-1 w-2 h-1 bg-pink-300 rounded-full opacity-60" />
+        
+        {/* Cute smile */}
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-4 h-2 border-b-2 border-gray-600 rounded-b-full" />
+      </div>
+    </div>
+  )
+}
+
+// Wave Divider Component
+const WaveDivider = ({ darkMode, flip = false }: { darkMode: boolean; flip?: boolean }) => {
+  return (
+    <div className={`w-full overflow-hidden ${flip ? 'rotate-180' : ''}`} style={{ height: '60px', marginTop: '-1px', marginBottom: '-1px' }}>
+      <svg
+        viewBox="0 0 1200 60"
+        preserveAspectRatio="none"
+        className="w-full h-full"
+      >
+        <path
+          d="M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z"
+          className={`transition-all duration-700 ${darkMode ? 'fill-gray-800/50' : 'fill-rose-100/40'}`}
+        />
+        <path
+          d="M0,40 C200,70 400,10 600,40 C800,70 1000,10 1200,40 L1200,60 L0,60 Z"
+          className={`transition-all duration-700 ${darkMode ? 'fill-gray-700/30' : 'fill-amber-100/40'}`}
+        />
+      </svg>
+    </div>
+  )
+}
+
 export default function Home() {
   const [scrollY, setScrollY] = useState(0)
   const [isVisible, setIsVisible] = useState(false)
@@ -201,15 +368,35 @@ export default function Home() {
   const [logoClicks, setLogoClicks] = useState(0)
   const [showEasterEgg, setShowEasterEgg] = useState(false)
   
-  // Torten Slider
-  const [sliderCake1, setSliderCake1] = useState(0)
-  const [sliderCake2, setSliderCake2] = useState(1)
-  
   // Audio Context
   const audioContextRef = useRef<AudioContext | null>(null)
+  
+  // Mouse Position for Cake Eyes
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  
+  // Torten-Fakten Carousel
+  const [currentFactIndex, setCurrentFactIndex] = useState(0)
+  const [factFadeIn, setFactFadeIn] = useState(true)
+  
+  // Backgeräusche (Ambient Sound)
+  const [isAmbientPlaying, setIsAmbientPlaying] = useState(false)
+  const ambientOscillatorsRef = useRef<OscillatorNode[]>([])
+  const ambientGainRef = useRef<GainNode | null>(null)
+  
+  // Holiday Countdown
+  const [holidayInfo, setHolidayInfo] = useState<HolidayInfo | null>(null)
+  const [daysUntilHoliday, setDaysUntilHoliday] = useState(0)
 
   useEffect(() => {
     setSeason(getSeason())
+    
+    // Set next holiday
+    const holiday = getNextHoliday()
+    setHolidayInfo(holiday)
+    const now = new Date()
+    const diffTime = holiday.date.getTime() - now.getTime()
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    setDaysUntilHoliday(diffDays)
     
     // Loading Animation
     const progressInterval = setInterval(() => {
@@ -237,7 +424,12 @@ export default function Home() {
       setScrollProgress(Math.min(progress, 100))
     }
     
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+    
     window.addEventListener('scroll', handleScroll, { passive: true })
+    window.addEventListener('mousemove', handleMouseMove)
 
     if (typeof window !== 'undefined') {
       const savedMode = localStorage.getItem('darkMode')
@@ -248,9 +440,23 @@ export default function Home() {
     
     return () => {
       window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('mousemove', handleMouseMove)
       clearTimeout(loadTimer)
       clearInterval(progressInterval)
     }
+  }, [])
+
+  // Torten-Fakten Carousel Auto-rotate
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFactFadeIn(false)
+      setTimeout(() => {
+        setCurrentFactIndex(prev => (prev + 1) % tortenFakten.length)
+        setFactFadeIn(true)
+      }, 500)
+    }, 5000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
@@ -289,6 +495,126 @@ export default function Home() {
       console.log('Audio not supported')
     }
   }, [])
+
+  // Ambient Baking Sound Functions
+  const startAmbientSound = useCallback(() => {
+    try {
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)()
+      }
+      const ctx = audioContextRef.current
+      
+      // Master gain for volume control
+      const masterGain = ctx.createGain()
+      masterGain.gain.setValueAtTime(0.05, ctx.currentTime)
+      masterGain.connect(ctx.destination)
+      ambientGainRef.current = masterGain
+      
+      // Mixer whirring sound (low frequency oscillation)
+      const mixerOsc = ctx.createOscillator()
+      mixerOsc.type = 'sine'
+      mixerOsc.frequency.setValueAtTime(120, ctx.currentTime)
+      
+      const mixerGain = ctx.createGain()
+      mixerGain.gain.setValueAtTime(0.3, ctx.currentTime)
+      
+      // LFO for mixer variation
+      const mixerLfo = ctx.createOscillator()
+      mixerLfo.type = 'sine'
+      mixerLfo.frequency.setValueAtTime(0.5, ctx.currentTime)
+      const mixerLfoGain = ctx.createGain()
+      mixerLfoGain.gain.setValueAtTime(15, ctx.currentTime)
+      mixerLfo.connect(mixerLfoGain)
+      mixerLfoGain.connect(mixerOsc.frequency)
+      
+      mixerOsc.connect(mixerGain)
+      mixerGain.connect(masterGain)
+      mixerOsc.start()
+      mixerLfo.start()
+      
+      // Oven hum sound (very low frequency)
+      const ovenOsc = ctx.createOscillator()
+      ovenOsc.type = 'sine'
+      ovenOsc.frequency.setValueAtTime(60, ctx.currentTime)
+      
+      const ovenGain = ctx.createGain()
+      ovenGain.gain.setValueAtTime(0.2, ctx.currentTime)
+      
+      // LFO for oven hum variation
+      const ovenLfo = ctx.createOscillator()
+      ovenLfo.type = 'sine'
+      ovenLfo.frequency.setValueAtTime(0.1, ctx.currentTime)
+      const ovenLfoGain = ctx.createGain()
+      ovenLfoGain.gain.setValueAtTime(5, ctx.currentTime)
+      ovenLfo.connect(ovenLfoGain)
+      ovenLfoGain.connect(ovenOsc.frequency)
+      
+      ovenOsc.connect(ovenGain)
+      ovenGain.connect(masterGain)
+      ovenOsc.start()
+      ovenLfo.start()
+      
+      // Air/bubbles sound (higher frequency, random)
+      const airOsc = ctx.createOscillator()
+      airOsc.type = 'sine'
+      airOsc.frequency.setValueAtTime(800, ctx.currentTime)
+      
+      const airGain = ctx.createGain()
+      airGain.gain.setValueAtTime(0, ctx.currentTime)
+      
+      // Random bubbles
+      const bubbleInterval = setInterval(() => {
+        if (airGain.gain && ctx.state === 'running') {
+          const now = ctx.currentTime
+          airGain.gain.setValueAtTime(0, now)
+          airGain.gain.linearRampToValueAtTime(0.1, now + 0.05)
+          airGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15)
+          airOsc.frequency.setValueAtTime(600 + Math.random() * 400, now)
+        }
+      }, 500 + Math.random() * 1500)
+      
+      airOsc.connect(airGain)
+      airGain.connect(masterGain)
+      airOsc.start()
+      
+      ambientOscillatorsRef.current = [mixerOsc, mixerLfo, ovenOsc, ovenLfo, airOsc]
+      ;(window as unknown as { bubbleInterval?: NodeJS.Timeout }).bubbleInterval = bubbleInterval
+      
+      setIsAmbientPlaying(true)
+    } catch {
+      console.log('Audio not supported')
+    }
+  }, [])
+
+  const stopAmbientSound = useCallback(() => {
+    try {
+      ambientOscillatorsRef.current.forEach(osc => {
+        try {
+          osc.stop()
+        } catch {
+          // Oscillator may already be stopped
+        }
+      })
+      ambientOscillatorsRef.current = []
+      
+      const bubbleInterval = (window as unknown as { bubbleInterval?: NodeJS.Timeout }).bubbleInterval
+      if (bubbleInterval) {
+        clearInterval(bubbleInterval)
+      }
+      
+      setIsAmbientPlaying(false)
+    } catch {
+      console.log('Error stopping ambient sound')
+    }
+  }, [])
+
+  const toggleAmbientSound = () => {
+    if (isAmbientPlaying) {
+      stopAmbientSound()
+    } else {
+      startAmbientSound()
+    }
+  }
 
   const scrollToGallery = () => {
     galleryRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -482,6 +808,38 @@ export default function Home() {
         />
       </div>
 
+      {/* Schwebende Zutaten (Floating Ingredients) */}
+      <div className="fixed inset-0 pointer-events-none z-5 overflow-hidden">
+        {floatingIngredients.map((emoji, i) => {
+          const positions = [
+            { left: '5%', top: '15%' },
+            { left: '15%', top: '70%' },
+            { left: '25%', top: '35%' },
+            { left: '75%', top: '20%' },
+            { left: '85%', top: '55%' },
+            { left: '45%', top: '80%' },
+            { left: '55%', top: '10%' },
+            { left: '35%', top: '60%' },
+            { left: '65%', top: '75%' },
+            { left: '90%', top: '40%' },
+          ]
+          return (
+            <div
+              key={i}
+              className={`absolute text-3xl md:text-4xl animate-float-ingredient transition-opacity duration-500 ${darkMode ? 'opacity-10' : 'opacity-15'}`}
+              style={{
+                left: positions[i].left,
+                top: positions[i].top,
+                animationDelay: `${i * 0.7}s`,
+                animationDuration: `${12 + i * 1.5}s`,
+              }}
+            >
+              {emoji}
+            </div>
+          )
+        })}
+      </div>
+
       {/* Seasonal Decorations */}
       {currentSeason.decorations.length > 0 && (
         <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
@@ -528,6 +886,18 @@ export default function Home() {
         </div>
       </button>
 
+      {/* Feiertags-Countdown (Holiday Countdown) */}
+      {holidayInfo && (
+        <div className={`fixed left-1/2 -translate-x-1/2 top-16 z-40 px-4 py-2 rounded-full shadow-lg backdrop-blur-sm transition-all duration-500 ${darkMode ? 'bg-gray-800/80 text-rose-300' : 'bg-white/80 text-rose-700'}`}>
+          <div className="flex items-center gap-2 font-cormorant text-sm md:text-base">
+            <Calendar className="w-4 h-4" />
+            <span className="font-semibold">
+              {holidayInfo.emoji} Noch <span className="text-lg md:text-xl font-bold">{daysUntilHoliday}</span> Tage bis {holidayInfo.name}!
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Back to Top Button */}
       <button
         onClick={scrollToTop}
@@ -536,6 +906,18 @@ export default function Home() {
       >
         <ChevronUp className="w-6 h-6 md:w-7 md:h-7" />
       </button>
+
+      {/* Ambient Sound Toggle Button */}
+      <button
+        onClick={toggleAmbientSound}
+        className={`fixed right-4 md:right-6 bottom-40 z-50 p-3 md:p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 transition-all duration-300 ${isAmbientPlaying ? 'bg-amber-500 text-white' : darkMode ? 'bg-gray-700 text-rose-300' : 'bg-white text-rose-700'}`}
+        aria-label={isAmbientPlaying ? 'Ambient Sound ausschalten' : 'Ambient Sound einschalten'}
+      >
+        {isAmbientPlaying ? <Volume2 className="w-6 h-6 md:w-7 md:h-7" /> : <VolumeX className="w-6 h-6 md:w-7 md:h-7" />}
+      </button>
+
+      {/* Torte mit Augen (Cake with Eyes) */}
+      <CakeWithEyes darkMode={darkMode} mousePosition={mousePosition} />
 
       {/* Parallax Floating Cakes */}
       <div className="fixed inset-0 pointer-events-none z-10 overflow-hidden">
@@ -665,6 +1047,9 @@ export default function Home() {
         </button>
       </section>
 
+      {/* Wave Divider: Hero → Gallery */}
+      <WaveDivider darkMode={darkMode} />
+
       {/* Gallery Section */}
       <section 
         ref={galleryRef} 
@@ -728,73 +1113,54 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Torten Slider Section */}
-      <section className={`py-20 md:py-28 px-4 md:px-6 transition-all duration-700 ${darkMode ? 'bg-gray-900/50' : 'bg-gradient-to-b from-amber-100/40 to-rose-100/40'}`}>
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className={`font-great-vibes text-5xl md:text-6xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
-              Vergleiche Torten
-            </h2>
-            <p className={`font-cormorant text-xl md:text-2xl ${darkMode ? 'text-rose-200/80' : 'text-rose-700/80'}`}>
-              Stelle zwei Torten gegenüber!
+      {/* Wave Divider: Gallery → Facts */}
+      <WaveDivider darkMode={darkMode} flip />
+
+      {/* Torten-Fakten Karussell (Cake Facts Carousel) */}
+      <section className={`py-16 md:py-20 px-4 md:px-6 transition-all duration-700 ${darkMode ? 'bg-gray-900/50' : 'bg-gradient-to-b from-amber-100/40 to-rose-100/40'}`}>
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className={`font-great-vibes text-4xl md:text-5xl mb-8 ${darkMode ? 'text-rose-300' : 'text-rose-900'}`}>
+            Torten-Fakten 🎂
+          </h2>
+          
+          <div className={`relative min-h-[120px] md:min-h-[100px] rounded-3xl p-6 md:p-8 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+            {/* Decorative elements */}
+            <div className="absolute top-4 left-4 text-2xl">📚</div>
+            <div className="absolute top-4 right-4 text-2xl">💡</div>
+            
+            <p 
+              className={`font-cormorant text-xl md:text-2xl lg:text-3xl transition-all duration-500 ${factFadeIn ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'} ${darkMode ? 'text-rose-200' : 'text-rose-700'}`}
+            >
+              {tortenFakten[currentFactIndex]}
             </p>
-          </div>
-
-          <div className={`rounded-3xl p-6 md:p-10 shadow-xl ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="text-center">
-                <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/images/${torten[sliderCake1].file}`}
-                    alt={torten[sliderCake1].name}
-                    className="w-full h-full object-contain drop-shadow-xl"
-                  />
-                </div>
-                <h3 className={`font-great-vibes text-3xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
-                  {torten[sliderCake1].name}
-                </h3>
-                <select
-                  value={sliderCake1}
-                  onChange={(e) => setSliderCake1(Number(e.target.value))}
-                  className={`w-full p-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-700'}`}
-                >
-                  {torten.map((t, i) => (
-                    <option key={i} value={i}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="hidden md:flex flex-col items-center justify-center">
-                <div className={`text-4xl font-bold ${darkMode ? 'text-rose-400' : 'text-rose-500'}`}>VS</div>
-              </div>
-
-              <div className="text-center">
-                <div className="relative w-64 h-64 md:w-80 md:h-80 mx-auto mb-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={`/images/${torten[sliderCake2].file}`}
-                    alt={torten[sliderCake2].name}
-                    className="w-full h-full object-contain drop-shadow-xl"
-                  />
-                </div>
-                <h3 className={`font-great-vibes text-3xl mb-4 ${darkMode ? 'text-rose-300' : 'text-rose-800'}`}>
-                  {torten[sliderCake2].name}
-                </h3>
-                <select
-                  value={sliderCake2}
-                  onChange={(e) => setSliderCake2(Number(e.target.value))}
-                  className={`w-full p-3 rounded-xl border-2 ${darkMode ? 'bg-gray-700 border-gray-600 text-gray-200' : 'bg-gray-50 border-gray-200 text-gray-700'}`}
-                >
-                  {torten.map((t, i) => (
-                    <option key={i} value={i}>{t.name}</option>
-                  ))}
-                </select>
-              </div>
+            
+            {/* Carousel Indicators */}
+            <div className="flex justify-center gap-2 mt-6">
+              {tortenFakten.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setFactFadeIn(false)
+                    setTimeout(() => {
+                      setCurrentFactIndex(i)
+                      setFactFadeIn(true)
+                    }, 300)
+                  }}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    i === currentFactIndex 
+                      ? 'w-6 bg-rose-500' 
+                      : darkMode ? 'bg-gray-600 hover:bg-gray-500' : 'bg-gray-300 hover:bg-gray-400'
+                  }`}
+                  aria-label={`Fakt ${i + 1}`}
+                />
+              ))}
             </div>
           </div>
         </div>
       </section>
+
+      {/* Wave Divider: Facts → Quiz */}
+      <WaveDivider darkMode={darkMode} />
 
       {/* Modal für Torte */}
       {selectedCake && (
@@ -1014,6 +1380,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Wave Divider: Quiz → Instagram */}
+      <WaveDivider darkMode={darkMode} flip />
+
       {/* Instagram Section */}
       <section className={`py-20 md:py-28 px-4 md:px-6 transition-all duration-700 ${darkMode ? 'bg-gray-900/50' : 'bg-gradient-to-b from-transparent via-rose-100/40 to-rose-100/60'}`}>
         <div className="max-w-4xl mx-auto text-center">
@@ -1057,6 +1426,9 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Wave Divider: Instagram → Footer */}
+      <WaveDivider darkMode={darkMode} />
+
       {/* Footer */}
       <footer className={`py-10 md:py-12 px-4 border-t transition-colors duration-700 ${darkMode ? 'bg-gray-900 border-gray-800' : 'bg-rose-100/40 border-rose-200/30'}`}>
         <div className="max-w-4xl mx-auto text-center">
@@ -1092,6 +1464,24 @@ export default function Home() {
         }
         .animate-float-slow {
           animation: float-slow 8s ease-in-out infinite;
+        }
+        
+        @keyframes float-ingredient {
+          0%, 100% { 
+            transform: translateY(0px) rotate(0deg) scale(1); 
+          }
+          25% { 
+            transform: translateY(-30px) rotate(5deg) scale(1.1); 
+          }
+          50% { 
+            transform: translateY(-15px) rotate(-3deg) scale(1); 
+          }
+          75% { 
+            transform: translateY(-25px) rotate(8deg) scale(1.05); 
+          }
+        }
+        .animate-float-ingredient {
+          animation: float-ingredient 15s ease-in-out infinite;
         }
         
         @keyframes modal-in {
